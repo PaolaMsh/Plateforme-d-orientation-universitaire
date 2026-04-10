@@ -1,291 +1,190 @@
-import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import "../styles/orientations.css";
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import '../styles/orientations.css';
 
-const schoolsDatabase = [
-  {
-    name: "Université d'Abomey-Calavi (UAC)",
-    location: "Abomey-Calavi",
-    region: "Sud",
-    annualCost: 150000,
-    domains: ["Informatique", "Gestion", "Droit", "Sciences"],
-  },
-  {
-    name: "EPAC (École Polytechnique d'Abomey-Calavi)",
-    location: "Abomey-Calavi",
-    region: "Sud",
-    annualCost: 250000,
-    domains: ["Ingénierie", "Informatique", "Génie civil"],
-  },
-  {
-    name: "Université de Parakou",
-    location: "Parakou",
-    region: "Nord",
-    annualCost: 120000,
-    domains: ["Agronomie", "Santé", "Lettres"],
-  },
-  {
-    name: "Institut Supérieur de Management (ISM)",
-    location: "Cotonou",
-    region: "Sud",
-    annualCost: 600000,
-    domains: ["Commerce", "Marketing", "Finance"],
-  },
-  {
-    name: "ENAM (École Nationale d'Administration et de Magistrature)",
-    location: "Cotonou",
-    region: "Sud",
-    annualCost: 180000,
-    domains: ["Administration", "Droit", "Sciences politiques"],
-  },
-  {
-    name: "ESTC (École Supérieure de Technologie et de Construction)",
-    location: "Cotonou",
-    region: "Sud",
-    annualCost: 350000,
-    domains: ["BTP", "Génie électrique", "Maintenance"],
-  },
-  {
-    name: "Université Nationale des Sciences (UNSTIM)",
-    location: "Abomey",
-    region: "Sud",
-    annualCost: 200000,
-    domains: ["Sciences de l'ingénieur", "Mathématiques", "Physique"],
-  },
-  {
-    name: "IRGIB Africa",
-    location: "Cotonou",
-    region: "Sud",
-    annualCost: 800000,
-    domains: ["Informatique", "Réseaux", "Télécoms"],
-  },
-  {
-    name: "Université de Kara",
-    location: "Kara",
-    region: "Nord",
-    annualCost: 100000,
-    domains: ["Lettres", "Sciences sociales"],
-  },
-];
-
-const domainMapping = {
-  R: ["Génie civil", "Mécanique", "Agriculture", "Électricité"],
-  I: ["Informatique", "Biologie", "Mathématiques", "Physique-Chimie"],
-  A: ["Design graphique", "Arts plastiques", "Communication", "Architecture"],
-  S: ["Psychologie", "Sciences de l'éducation", "Travail social", "Médecine"],
-  E: ["Commerce", "Marketing", "Gestion d'entreprise", "Économie"],
-  C: [
-    "Comptabilité",
-    "Gestion administrative",
-    "Informatique de gestion",
-    "Secrétariat",
-  ],
-};
-
-const personalityDescriptions = {
-  R: "Vous êtes une personne pragmatique, concrète, qui aime travailler avec ses mains et résoudre des problèmes techniques. Vous êtes souvent indépendant et préférez les activités physiques ou en extérieur.",
-  I: "Vous êtes curieux, analytique et méthodique. Vous aimez la recherche, l'exploration de nouvelles idées et la résolution de problèmes complexes. Vous appréciez le travail en laboratoire ou la réflexion théorique.",
-  A: "Vous êtes créatif, imaginatif et expressif. Vous avez besoin de liberté pour créer et vous exprimer. Les activités artistiques (écriture, dessin, musique, design) sont vos points forts.",
-  S: "Vous êtes empathique, patient et à l'écoute. Vous aimez aider, conseiller, enseigner ou soigner les autres. Les métiers du social, de l'éducation ou de la santé vous correspondent.",
-  E: "Vous êtes ambitieux, charismatique et persuasif. Vous aimez prendre des risques, diriger, convaincre et atteindre des objectifs. Les métiers de la vente, du management ou de l'entrepreneuriat sont faits pour vous.",
-  C: "Vous êtes organisé, minutieux et fiable. Vous préférez les tâches structurées, les procédures claires et les environnements stables. La comptabilité, l'administration ou l'informatique de gestion vous attirent.",
-};
-
-const aptitudeDescriptions = {
-  R: "Habileté manuelle, coordination, résolution de problèmes techniques.",
-  I: "Raisonnement logique, analyse de données, curiosité scientifique.",
-  A: "Créativité, expression artistique, sens esthétique.",
-  S: "Empathie, communication, pédagogie, écoute active.",
-  E: "Leadership, persuasion, prise de décision, gestion de projet.",
-  C: "Organisation, rigueur, gestion des chiffres, respect des procédures.",
-};
-
-const competenceDescriptions = {
-  R: "Utilisation d'outils, montage/démontage, maintenance, travail en extérieur.",
-  I: "Recherche documentaire, expérimentation, programmation, analyse statistique.",
-  A: "Dessin, écriture, composition musicale, conception graphique.",
-  S: "Conseil, enseignement, médiation, soins de base.",
-  E: "Négociation, vente, planification stratégique, gestion d'équipe.",
-  C: "Saisie de données, tenue de comptes, archivage, utilisation de logiciels bureautiques.",
-};
-
-const Orientation = () => {
+const Orientations = () => {
   const location = useLocation();
-  const { scores, userInfo } = location.state || {
-    scores: null,
-    userInfo: { location: "", budget: 0 },
-  };
-  const [filteredSchools, setFilteredSchools] = useState([]);
-
-  const getDominantTypes = (scoresObj) => {
-    return Object.entries(scoresObj)
-      .sort((a, b) => b[1] - a[1])
-      .map((entry) => entry[0]);
-  };
-
-  const dominantTypes = scores ? getDominantTypes(scores) : [];
-  const primaryType = dominantTypes[0] || "S";
-  const secondaryType = dominantTypes[1] || "I";
-
-  const getRecommendedDomains = () => {
-    const primaryDomains = domainMapping[primaryType] || domainMapping.S;
-    const secondaryDomains = domainMapping[secondaryType] || domainMapping.I;
-    const combined = [
-      ...primaryDomains.slice(0, 2),
-      ...secondaryDomains.slice(0, 2),
-    ];
-    return combined.slice(0, 4);
-  };
-
-  const recommendedDomains = getRecommendedDomains();
+  const navigate = useNavigate();
+  const [results, setResults] = useState(null);
+  const [activeTab, setActiveTab] = useState('radar');
 
   useEffect(() => {
-    if (!userInfo.location || !scores) return;
-    const userLocationLower = userInfo.location.toLowerCase();
-    const userBudget = Number(userInfo.budget);
-    const filtered = schoolsDatabase.filter((school) => {
-      const matchesLocation =
-        school.location.toLowerCase().includes(userLocationLower) ||
-        school.region.toLowerCase().includes(userLocationLower) ||
-        userLocationLower.includes(school.location.toLowerCase());
-      const matchesBudget = school.annualCost <= userBudget;
-      return matchesLocation && matchesBudget;
-    });
-    setFilteredSchools(filtered);
-  }, [userInfo, scores]);
+    const stateResults = location.state?.results;
+    const storedResults = localStorage.getItem('riasec_results');
+    
+    if (stateResults) {
+      setResults(stateResults);
+    } else if (storedResults) {
+      setResults(JSON.parse(storedResults));
+    } else {
+      navigate('/tests');
+    }
+  }, [location, navigate]);
 
-  if (!scores) {
+  if (!results) {
     return (
-      <div className="orientation-container">
-        Aucun résultat trouvé. Veuillez d'abord passer le test.
+      <div className="orientations-container">
+        <div className="loader">Chargement de vos résultats...</div>
       </div>
     );
   }
 
+  const { riasec, code } = results;
+
+  const types = [
+    { type: 'R', name: 'Réaliste', icon: '🛠️', color: '#FF6B6B', desc: 'Pratique, aime travailler avec des outils' },
+    { type: 'I', name: 'Investigateur', icon: '🔬', color: '#4ECDC4', desc: 'Curieux, aime résoudre des problèmes' },
+    { type: 'A', name: 'Artistique', icon: '🎨', color: '#FFE66D', desc: 'Créatif, aime s\'exprimer' },
+    { type: 'S', name: 'Social', icon: '🤝', color: '#95E77E', desc: 'Aime aider les autres' },
+    { type: 'E', name: 'Entreprenant', icon: '📈', color: '#FF9F4A', desc: 'Leader, prend des initiatives' },
+    { type: 'C', name: 'Conventionnel', icon: '📊', color: '#A78BFA', desc: 'Organisé, méthodique' }
+  ];
+
+  const careersByType = {
+    R: ['Mécanicien', 'Électricien', 'Ingénieur civil', 'Technicien', 'Agriculteur'],
+    I: ['Médecin', 'Chercheur', 'Biologiste', 'Data Scientist', 'Pharmacien'],
+    A: ['Designer', 'Architecte', 'Musicien', 'Écrivain', 'Photographe'],
+    S: ['Enseignant', 'Psychologue', 'Infirmier', 'Travailleur social', 'Coach'],
+    E: ['Entrepreneur', 'Manager', 'Commercial', 'Avocat', 'Consultant'],
+    C: ['Comptable', 'Analyste financier', 'Secrétaire', 'Administrateur']
+  };
+
+  const formationsByType = {
+    R: ['BTS Maintenance', 'Licence Génie civil', 'DUT Génie industriel'],
+    I: ['Doctorat', 'Master Sciences', 'École de médecine', 'Master Data Science'],
+    A: ['École des Beaux-Arts', 'Master Design', 'Licence Arts'],
+    S: ['Master Psychologie', 'École normale', 'Licence Sociologie'],
+    E: ['École de commerce', 'Master Management', 'Licence Économie'],
+    C: ['BTS Comptabilité', 'Licence Gestion', 'Master Finance']
+  };
+
+  const sortedTypes = [...types].sort((a, b) => riasec[b.type] - riasec[a.type]);
+  const dominantTypes = sortedTypes.slice(0, 3);
+
   return (
-    <div className="orientation-wrapper">
-      <h1 className="orientation-title">Vos résultats d'orientation</h1>
+    <div className="orientations-page">
+      <div className="orientations-wrapper">
+        {/* En-tête */}
+        <div className="orientations-header">
+          <h1>🎉 Votre Profil RIASEC</h1>
+          <p>Découvrez les métiers et formations qui vous correspondent</p>
+        </div>
 
-      <div className="scores-section">
-        <h2>Profils RIASEC</h2>
-        <div className="scores-bars">
-          {Object.entries(scores).map(([type, value]) => (
-            <div key={type} className="score-bar-item">
-              <span className="score-label">
-                {type === "R"
-                  ? "Réaliste"
-                  : type === "I"
-                    ? "Investigateur"
-                    : type === "A"
-                      ? "Artistique"
-                      : type === "S"
-                        ? "Social"
-                        : type === "E"
-                          ? "Entreprenant"
-                          : "Conventionnel"}
-              </span>
-              <div className="bar-container">
-                <div
-                  className="bar-fill"
-                  style={{
-                    width: `${value}%`,
-                    backgroundColor: `hsl(${value * 1.2}, 70%, 50%)`,
-                  }}
-                ></div>
-                <span className="bar-value">{value}%</span>
-              </div>
+        {/* Code RIASEC */}
+        <div className="code-card">
+          <span className="code-label">Votre code</span>
+          <span className="code-value">{code}</span>
+        </div>
+
+        {/* Tabs */}
+        <div className="tabs">
+          <button className={`tab ${activeTab === 'radar' ? 'active' : ''}`} onClick={() => setActiveTab('radar')}>
+            📊 Profil
+          </button>
+          <button className={`tab ${activeTab === 'careers' ? 'active' : ''}`} onClick={() => setActiveTab('careers')}>
+            💼 Métiers
+          </button>
+          <button className={`tab ${activeTab === 'formations' ? 'active' : ''}`} onClick={() => setActiveTab('formations')}>
+            🎓 Formations
+          </button>
+        </div>
+
+        {/* Tab Profil */}
+        {activeTab === 'radar' && (
+          <div className="tab-content">
+            <h3>Vos scores par type</h3>
+            <div className="scores-list">
+              {types.map(type => (
+                <div key={type.type} className="score-item">
+                  <div className="score-header">
+                    <span className="score-icon">{type.icon}</span>
+                    <span className="score-name">{type.name}</span>
+                    <span className="score-percent">{riasec[type.type]}%</span>
+                  </div>
+                  <div className="score-bar-bg">
+                    <div className="score-bar-fill" style={{ width: `${riasec[type.type]}%`, backgroundColor: type.color }}></div>
+                  </div>
+                  <p className="score-desc">{type.desc}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
 
-      <div className="dominant-type">
-        <h2>
-          Votre profil dominant :{" "}
-          <span>
-            {primaryType === "R"
-              ? "Réaliste"
-              : primaryType === "I"
-                ? "Investigateur"
-                : primaryType === "A"
-                  ? "Artistique"
-                  : primaryType === "S"
-                    ? "Social"
-                    : primaryType === "E"
-                      ? "Entreprenant"
-                      : "Conventionnel"}
-          </span>
-        </h2>
-      </div>
-
-      <div className="analysis-grid">
-        <div className="analysis-card">
-          <h3>🎭 Personnalité</h3>
-          <p>{personalityDescriptions[primaryType]}</p>
-        </div>
-        <div className="analysis-card">
-          <h3>⚙️ Aptitudes</h3>
-          <p>{aptitudeDescriptions[primaryType]}</p>
-        </div>
-        <div className="analysis-card">
-          <h3>📚 Compétences clés</h3>
-          <p>{competenceDescriptions[primaryType]}</p>
-        </div>
-      </div>
-
-      <div className="domains-section">
-        <h2>🎓 Domaines d'études recommandés</h2>
-        <div className="domains-list">
-          {recommendedDomains.map((domain, idx) => (
-            <div key={idx} className="domain-item">
-              <span className="domain-rank">{idx + 1}</span>
-              <span className="domain-name">{domain}</span>
+            <h3>✨ Vos types dominants</h3>
+            <div className="dominants">
+              {dominantTypes.map((type, idx) => (
+                <div key={type.type} className="dominant-card" style={{ borderColor: type.color }}>
+                  <div className="dominant-rank">#{idx + 1}</div>
+                  <div className="dominant-icon">{type.icon}</div>
+                  <div className="dominant-name">{type.name}</div>
+                  <div className="dominant-score">{riasec[type.type]}%</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        )}
 
-      <div className="schools-section">
-        <h2>
-          🏫 Établissements correspondants (localisation : {userInfo.location},
-          budget max : {userInfo.budget} FCFA)
-        </h2>
-        {filteredSchools.length === 0 ? (
-          <p>
-            Aucune école trouvée dans votre région avec ce budget. Élargissez
-            vos critères ou consultez notre conseiller.
-          </p>
-        ) : (
-          <div className="schools-list">
-            {filteredSchools.map((school, idx) => (
-              <div key={idx} className="school-card">
-                <h3>{school.name}</h3>
-                <p>
-                  <strong>📍 Localisation :</strong> {school.location}
-                </p>
-                <p>
-                  <strong>💰 Coût annuel :</strong>{" "}
-                  {school.annualCost.toLocaleString()} FCFA
-                </p>
-                <p>
-                  <strong>📖 Domaines :</strong> {school.domains.join(", ")}
-                </p>
+        {/* Tab Métiers */}
+        {activeTab === 'careers' && (
+          <div className="tab-content">
+            <h3>Métiers recommandés</h3>
+            {dominantTypes.map(type => (
+              <div key={type.type} className="career-group">
+                <div className="career-group-header" style={{ backgroundColor: `${type.color}15`, borderColor: type.color }}>
+                  <span>{type.icon}</span> Type {type.name}
+                </div>
+                <div className="career-list">
+                  {careersByType[type.type].map((career, idx) => (
+                    <div key={idx} className="career-item">▹ {career}</div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         )}
-      </div>
 
-      <div className="action-buttons">
-        <button onClick={() => window.print()} className="print-btn">
-          🖨️ Exporter en PDF
-        </button>
-        <button onClick={() => window.history.back()} className="retest-btn">
-          🔁 Refaire le test
-        </button>
+        {/* Tab Formations */}
+        {activeTab === 'formations' && (
+          <div className="tab-content">
+            <h3>Formations recommandées</h3>
+            {dominantTypes.map(type => (
+              <div key={type.type} className="formation-group">
+                <div className="formation-group-header" style={{ backgroundColor: `${type.color}15`, borderColor: type.color }}>
+                  <span>{type.icon}</span> Type {type.name}
+                </div>
+                <div className="formation-list">
+                  {formationsByType[type.type].map((formation, idx) => (
+                    <div key={idx} className="formation-item">📖 {formation}</div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <h3>🏫 Établissements au Bénin</h3>
+            <div className="schools-grid">
+              <div className="school-card">
+                <h4>UAC - Abomey-Calavi</h4>
+                <p>Sciences, Lettres, Droit, Economie</p>
+              </div>
+              <div className="school-card">
+                <h4>ESGIS - Cotonou</h4>
+                <p>Informatique, Gestion, Marketing</p>
+              </div>
+              <div className="school-card">
+                <h4>IST - Porto-Novo</h4>
+                <p>Génie civil, Informatique</p>
+              </div>
+            </div>
+
+            <div className="action-buttons">
+              <button className="btn-print" onClick={() => window.print()}>🖨️ Imprimer</button>
+              <button className="btn-retest" onClick={() => navigate('/tests')}>🔄 Refaire le test</button>
+              <button className="btn-schools" onClick={() => navigate('/universites-formations')}>🏫 Voir les écoles</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default Orientation;
+export default Orientations;
