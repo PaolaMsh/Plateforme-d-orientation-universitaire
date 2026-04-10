@@ -1,0 +1,218 @@
+.universities-page {
+  background: #f8f9fc;
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* En-tête et recherche */
+.search-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.search-header h1 {
+  font-size: 2.5rem;
+  color: #1a1a2e;
+  margin-bottom: 0.5rem;
+}
+
+.search-header p {
+  color: #6b6b7a;
+  margin-bottom: 2rem;
+}
+
+.search-bar {
+  max-width: 600px;
+  margin: 0 auto 1rem;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.9rem 1rem 0.9rem 3rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 50px;
+  font-size: 1rem;
+  transition: all 0.3s;
+  background: white;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #6246e5;
+  box-shadow: 0 0 0 3px rgba(98, 70, 229, 0.1);
+}
+
+.results-count {
+  font-size: 0.9rem;
+  color: #6246e5;
+  font-weight: 500;
+}
+
+/* Grille des universités */
+.universities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.uni-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.uni-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.uni-image {
+  height: 180px;
+  overflow: hidden;
+}
+
+.uni-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.uni-card:hover .uni-image img {
+  transform: scale(1.05);
+}
+
+.uni-content {
+  padding: 1.5rem;
+}
+
+.uni-content h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: #1a1a2e;
+  font-weight: 700;
+}
+
+.uni-location,
+.uni-students,
+.uni-formations {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: #6b6b7a;
+  margin-bottom: 0.5rem;
+}
+
+.uni-formations {
+  margin-bottom: 1rem;
+}
+
+.uni-description {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #4a4a5a;
+  line-height: 1.5;
+}
+
+.extra-formations {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #6246e5;
+}
+
+.read-more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #6246e5;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  transition: color 0.2s;
+}
+
+.read-more-link:hover {
+  color: #4c3ab5;
+  text-decoration: underline;
+}
+
+.read-more-btn:hover {
+  color: #4c3ab5;
+}
+
+/* Bouton Voir plus */
+.see-more-container {
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.see-more-btn {
+  background: #6246e5;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 40px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.see-more-btn:hover {
+  background: #4c3ab5;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(98, 70, 229, 0.3);
+}
+
+.no-results {
+  text-align: center;
+  padding: 4rem;
+  background: white;
+  border-radius: 20px;
+  color: #999;
+}
+
+.no-results svg {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #ccc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-header h1 {
+    font-size: 1.8rem;
+  }
+  .universities-grid {
+    grid-template-columns: 1fr;
+  }
+  .container {
+    padding: 0 1rem;
+  }
+}

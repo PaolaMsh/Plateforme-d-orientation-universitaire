@@ -1,0 +1,164 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%);
+}
+
+.preambule-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.preambule-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.preambule-header p {
+  font-size: 1.2rem;
+  color: #6B6B7A;
+}
+
+.choice-section h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #1A1A2E;
+  font-weight: 600;
+}
+
+.choice-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  flex: 1;
+  min-width: 280px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #1A1A2E;
+}
+
+.card p {
+  color: #6B6B7A;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.card.full-test {
+  border: 1px solid #e9edf2;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f6ff 100%);
+}
+
+.card.full-test h3 {
+  color: #6246E5;
+}
+
+.card.single-phase {
+  border: 1px solid #e9edf2;
+  background: #ffffff;
+}
+
+
+.btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 40px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn.primary {
+  background: #6246E5;
+  color: white;
+  width: 100%;
+}
+
+.btn.primary:hover {
+  background: #4C3AB5;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(98, 70, 229, 0.3);
+}
+
+.btn.secondary {
+  background: #f0f2f5;
+  color: #6246E5;
+  margin: 0.5rem;
+  width: auto;
+}
+
+.btn.secondary:hover {
+  background: #e4e6ea;
+  transform: translateY(-1px);
+}
+
+.phase-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.info-section {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.info-section h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: #1A1A2E;
+}
+
+.info-section ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.info-section li {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  position: relative;
+  color: #6B6B7A;
+  line-height: 1.5;
+}
+
+.info-section li::before {
+  content: "✓";
+  color: #6246E5;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
