@@ -19,7 +19,6 @@ const LoginPage = () => {
     setError("");
     setIsLoading(true);
 
-    // Simulation d'un utilisateur connecté (sans texte)
     setTimeout(() => {
       const mockUser = {
         id: 1,

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/tests.css';
 
-// 18 questions RIASEC (3 par type)
 const questionsData = [
   // Réaliste (R)
   { id: 1, type: 'R', text: "Je préfère travailler avec des outils et des machines.", options: ["Pas du tout", "Peu", "Moyennement", "Beaucoup", "Tout à fait"] },
@@ -113,12 +112,10 @@ const Test = () => {
           <div className="test-progress">{Math.round(progress)}%</div>
         </div>
 
-        {/* Barre progression */}
         <div className="progress-bar-container">
           <div className="progress-bar" style={{ width: `${progress}%` }}></div>
         </div>
 
-        {/* Question */}
         <div className="question-card">
           <div className="question-counter">
             Question {currentIndex + 1} / {total}
@@ -149,7 +146,6 @@ const Test = () => {
           </div>
         </div>
 
-        {/* Modal confirmation */}
         {showConfirm && (
           <div className="modal-overlay">
             <div className="modal">

@@ -10,12 +10,10 @@ const Header = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user, logout } = useAuth();
     
-    // États
     const [showMenu, setShowMenu] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const menuRef = useRef(null);
 
-    // Fonctions
     const handleLogout = () => {
         logout();
         setShowMenu(false);

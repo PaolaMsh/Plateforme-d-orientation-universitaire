@@ -236,7 +236,6 @@
   margin-top: 1rem;
 }
 
-/* ========== PROGRAMS SECTION ========== */
 .programs-grid {
   max-width: 1200px;
   margin: 0 auto;
@@ -529,8 +528,7 @@
   color: #6246E5;
 }
 
-/* ========== RESPONSIVE ========== */
-@media (max-width: 992px) {
+ @media (max-width: 992px) {
   .hero {
     flex-direction: column;
     text-align: center;

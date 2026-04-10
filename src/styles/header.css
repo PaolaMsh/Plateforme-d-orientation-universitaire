@@ -116,7 +116,6 @@ body {
   border-radius: 2px;
 }
 
-/* ========== MENU UTILISATEUR ========== */
 .user-menu-container {
   position: relative;
 }
@@ -176,7 +175,6 @@ body {
   transform: rotate(180deg);
 }
 
-/* Menu déroulant */
 .user-menu-dropdown {
   position: absolute;
   right: 0;
@@ -244,7 +242,6 @@ body {
   color: var(--error-color);
 }
 
-/* Confirmations */
 .logout-confirmation,
 .login-confirmation {
   padding: 1rem;
@@ -302,7 +299,6 @@ body {
   background: #E2E8F0;
 }
 
-/* ========== RESPONSIVE ========== */
 @media (max-width: 1024px) {
   .nav-menu {
     gap: 1.5rem;

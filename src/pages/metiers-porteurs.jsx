@@ -276,7 +276,6 @@ const MetiersPorteurs = () => {
                 </div>
             </section>
 
-            {/* Filter Section */}
             <section className="filter-section">
                 <div className="filter-container">
                     <h2 className="filter-title">Explorez par secteur</h2>
@@ -348,7 +347,6 @@ const MetiersPorteurs = () => {
                 </div>
             </section>
 
-            {/* Formation Section */}
             <section className="formation-section">
                 <div className="formation-container">
                     <h2 className="formation-title">🎯 Comment se former ?</h2>

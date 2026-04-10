@@ -52,7 +52,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Composants de protection
 export const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 

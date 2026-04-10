@@ -70,13 +70,11 @@ const Orientations = () => {
           <p>Découvrez les métiers et formations qui vous correspondent</p>
         </div>
 
-        {/* Code RIASEC */}
         <div className="code-card">
           <span className="code-label">Votre code</span>
           <span className="code-value">{code}</span>
         </div>
 
-        {/* Tabs */}
         <div className="tabs">
           <button className={`tab ${activeTab === 'radar' ? 'active' : ''}`} onClick={() => setActiveTab('radar')}>
             📊 Profil
@@ -89,7 +87,6 @@ const Orientations = () => {
           </button>
         </div>
 
-        {/* Tab Profil */}
         {activeTab === 'radar' && (
           <div className="tab-content">
             <h3>Vos scores par type</h3>
@@ -123,7 +120,6 @@ const Orientations = () => {
           </div>
         )}
 
-        {/* Tab Métiers */}
         {activeTab === 'careers' && (
           <div className="tab-content">
             <h3>Métiers recommandés</h3>
@@ -142,7 +138,6 @@ const Orientations = () => {
           </div>
         )}
 
-        {/* Tab Formations */}
         {activeTab === 'formations' && (
           <div className="tab-content">
             <h3>Formations recommandées</h3>
