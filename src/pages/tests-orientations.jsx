@@ -1,66 +1,115 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/tests-orientations.css';
 
-const Testsorientations = () => {
-  const phases = [
-    { id: 1, name: "Phase 1 : Amorçage" },
-    { id: 2, name: "Phase 2 : Aptitude" },
-    { id: 3, name: "Phase 3 : Compétence" },
-    { id: 4, name: "Phase 4 : Personnalité" }
-  ];
+const phases = [
+  { id: 1, name: 'Amorçage',    icon: '🌱', desc: 'Premiers traits de personnalité' },
+  { id: 2, name: 'Aptitude',    icon: '💡', desc: 'Compétences et aptitudes' },
+  { id: 3, name: 'Compétence',  icon: '🎯', desc: 'Domaines de maîtrise' },
+  { id: 4, name: 'Personnalité',icon: '🧠', desc: 'Traits comportementaux' },
+];
 
-  return (
-    <div className="preambule-container">
-      <header className="preambule-header">
-        <p>Découvrez vos talents et les métiers qui vous correspondent grâce à notre test</p>
-      </header>
+const steps = [
+  { num: '01', icon: '📝', title: 'Réponds aux questions',   desc: 'Lis chaque affirmation et choisis l\'option qui te correspond le mieux. Sois honnête !' },
+  { num: '02', icon: '📊', title: 'Analyse RIASEC',          desc: 'Nos algorithmes calculent tes 6 scores et identifient ton profil dominant.' },
+  { num: '03', icon: '🎓', title: 'Découvre ton orientation', desc: 'Reçois une liste personnalisée de métiers, filières et établissements adaptés.' },
+];
 
-      <div className="choice-section">
-        <h2>Comment souhaitez-vous passer le test ?</h2>
-        <div className="choice-cards">
-          <div className="card full-test">
-            <h3>📋 Test complet</h3>
-            <p>Répondez aux 4 phases du test pour un profil détaillé et des recommandations précises.</p>
-            <Link
-              to="/tests"
-              state={{ mode: 'full', phases: phases.map(p => p.id) }}
-              className="btn primary"
-            >
-              Commencer le test complet
-            </Link>
+const Testsorientations = () => (
+  <div className="to-page">
+
+    <div className="to-hero">
+      <div className="to-hero-inner">
+        <div className="to-hero-badge">Test d'orientation RIASEC</div>
+        <h1 className="to-hero-title">
+          Découvre la filière<br />
+          <span className="to-hero-accent">qui te correspond</span>
+        </h1>
+        <p className="to-hero-sub">
+          Un test scientifique de 18 questions pour identifier ton profil parmi
+          6 dimensions et te recommander les meilleures formations au Bénin.
+        </p>
+        <div className="to-hero-pills">
+          <span className="to-pill">📋 18 questions</span>
+          <span className="to-pill">⏱️ ~5 minutes</span>
+          <span className="to-pill">🔬 6 dimensions</span>
+          <span className="to-pill">✅ 100% gratuit</span>
+        </div>
+      </div>
+    </div>
+
+    <div className="to-wrapper">
+
+      <div className="to-section-label">Comment souhaitez-vous passer le test ?</div>
+
+      <div className="to-cards">
+
+        <div className="to-card to-card--featured">
+          <div className="to-card-badge">Recommandé</div>
+          <div className="to-card-icon">📋</div>
+          <h2 className="to-card-title">Test complet</h2>
+          <p className="to-card-desc">
+            Répondez aux 18 questions en une seule session pour obtenir
+            un profil RIASEC complet et des recommandations précises.
+          </p>
+          <ul className="to-card-features">
+            <li>✓ Profil détaillé sur 6 dimensions</li>
+            <li>✓ Métiers et formations personnalisés</li>
+            <li>✓ Rapport imprimable</li>
+            <li>✓ ~5 minutes seulement</li>
+          </ul>
+          <Link
+            to="/tests"
+            state={{ mode: 'full', phases: phases.map(p => p.id) }}
+            className="to-btn to-btn--primary"
+          >
+            Commencer le test complet →
+          </Link>
+        </div>
+
+        <div className="to-card">
+          <div className="to-card-icon">🎯</div>
+          <h2 className="to-card-title">Choisir une phase</h2>
+          <p className="to-card-desc">
+            Explorez une dimension spécifique du test si vous souhaitez
+            approfondir un aspect particulier de votre profil.
+          </p>
+          <div className="to-phases-grid">
+            {phases.map(ph => (
+              <Link
+                key={ph.id}
+                to="/tests"
+                state={{ mode: 'single', phaseId: ph.id }}
+                className="to-phase-btn"
+              >
+                <span className="to-phase-icon">{ph.icon}</span>
+                <span className="to-phase-info">
+                  <span className="to-phase-name">Phase {ph.id}</span>
+                  <span className="to-phase-sub">{ph.name}</span>
+                </span>
+              </Link>
+            ))}
           </div>
+        </div>
 
-          <div className="card single-phase">
-            <h3>🎯 Choisir une phase</h3>
-            <p>Sélectionnez une étape spécifique du test.</p>
-            <div className="phase-buttons">
-              {phases.map(phase => (
-                <Link
-                  key={phase.id}
-                  to="/tests"
-                  state={{ mode: 'single', phaseId: phase.id }}
-                  className="btn secondary"
-                >
-                  {phase.name}
-                </Link>
-              ))}
+      </div>
+
+      <div className="to-how">
+        <div className="to-how-title">Comment ça marche ?</div>
+        <div className="to-steps">
+          {steps.map((s, i) => (
+            <div key={i} className="to-step">
+              <div className="to-step-num">{s.num}</div>
+              <div className="to-step-icon">{s.icon}</div>
+              <h3 className="to-step-title">{s.title}</h3>
+              <p className="to-step-desc">{s.desc}</p>
+              {i < steps.length - 1 && <div className="to-step-arrow">→</div>}
             </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      <div className="info-section">
-        <h3>Comment ça marche ?</h3>
-        <ul>
-          <li><strong>Test complet</strong> : 4 phases successives. Vous pourrez faire une pause et reprendre plus tard.</li>
-          <li><strong>Phase unique</strong> : choisissez une étape pour explorer un aspect particulier.</li>
-          <li>À la fin, vous obtiendrez votre profil et une liste de métiers adaptés.</li>
-          <li>L'IA analyse vos réponses pour affiner les recommandations.</li>
-        </ul>
-      </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default Testsorientations;
