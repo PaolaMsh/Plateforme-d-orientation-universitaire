@@ -19,6 +19,7 @@ import FAQ from "./pages/faq";
 import MetiersPorteurs from "./pages/metiers-porteurs";
 import AuthLogin from "./pages/login";
 import AuthRegister from "./pages/register";
+import Bourses from "./pages/bourses-aides";
 
 function AppRoutes() {
   return (
@@ -150,6 +151,17 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <MetiersPorteurs />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/bourses-aides"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Bourses />
             </Layout>
           </ProtectedRoute>
         }

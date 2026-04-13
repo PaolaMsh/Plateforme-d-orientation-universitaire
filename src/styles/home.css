@@ -511,6 +511,10 @@
 .cta-container .cta-primary {
   background: white;
   color: #6246E5;
+  border-radius: 70px;
+  padding: 10px 10px 10px 10px ;
+  border: none;
+  text-decoration: none;
 }
 
 .cta-container .cta-primary:hover {
@@ -521,6 +525,9 @@
   background: transparent;
   color: white;
   border-color: white;
+  border-radius: 70px;
+  padding: 10px 10px 10px 10px ;
+  text-decoration: none;
 }
 
 .cta-container .cta-secondary:hover {
@@ -581,11 +588,7 @@
     font-size: 1.5rem;
   }
   
-  .cta-buttons {
-    flex-direction: column;
-    align-items: center;
-  }
-  
+    
   .universities-grid {
     grid-template-columns: 1fr;
   }

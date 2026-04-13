@@ -28,7 +28,7 @@ const Footer = () => {
                 <div className="footer-section">
                     <h3>Ressources</h3>
                     <ul className="footer-links">
-                        <li><Link to="/bourses">Bourses d'études</Link></li>
+                        <li><Link to="/bourses-aides">Bourses d'études</Link></li>
                         <li><a href="https://apresmonbac.bj/" target="_blank" rel="noopener noreferrer">Plateforme Après Bac</a></li>
                     </ul>
                 </div>
