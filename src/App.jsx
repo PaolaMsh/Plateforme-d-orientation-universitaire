@@ -1,184 +1,59 @@
-import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { AuthProvider, ProtectedRoute, PublicRoute } from "./context/authContext";
-import Home from "./pages/home";
-import Layout from "./layouts/Defaultlayout";
-import Testsorientations from "./pages/tests-orientations";
-import Formationsetmétiers from "./pages/universites-formations";
-import Test from "./pages/tests";
-import Orientations from "./pages/orientations";
-import Support from "./pages/support";
-import Guideriasec from "./pages/guide-riasec";
-import Contact from "./pages/contact";
-import FAQ from "./pages/faq";
-import MetiersPorteurs from "./pages/metiers-porteurs";
-import AuthLogin from "./pages/login";
-import AuthRegister from "./pages/register";
-import Bourses from "./pages/bourses-aides";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/authContext';
 
-function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/accueil" replace />} />
-      
-      <Route
-        path="/accueil"
-        element={
-          <Layout>
-            <Home />
-          </Layout>
-        }
-      />
+// Pages
+import Home from './pages/home';
+import LoginPage from './pages/login';
+import RegisterPage from './pages/register';
+import MetiersPorteurs from './pages/metiers-porteurs';
+import Orientations from './pages/orientations';
+import Support from './pages/support';
+import Test from './pages/tests';
+import Testsorientations from './pages/tests-orientations';
+import UniversitiesPage from './pages/universites-formations';
+import HeaderParent from './components/headerParent';
+import Footer from './components/footer';
+import BoursesAides from './pages/bourses-aides';
+import Contact from './pages/contact';
+import Faq from './pages/faq';
+import GuideRiasec from './pages/guide-riasec';
 
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Layout>
-              <AuthLogin />
-            </Layout>
-          </PublicRoute>
-        }
-      />
 
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <Layout>
-              <AuthRegister />
-            </Layout>
-          </PublicRoute>
-        }
-      />
-
-      <Route
-        path="/tests-orientations"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Testsorientations />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/tests"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Test />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/orientations"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Orientations />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/universites-formations"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Formationsetmétiers />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/support"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Support />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/guide-riasec"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Guideriasec />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/contact"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Contact />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/faq"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <FAQ />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/metiers-porteurs"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <MetiersPorteurs />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/bourses-aides"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Bourses />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route path="*" element={<Navigate to="/accueil" replace />} />
-    </Routes>
-  );
-}
+const ProtectedRoute = ({ children }) => {
+  const { token } = useAuth();
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <HeaderParent />
+        <Routes>
+          <Route path="/" element={<Navigate to="/accueil" replace />} />
+          <Route path="/accueil" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/metiers-porteurs" element={<MetiersPorteurs />} />
+          <Route path="/orientations" element={<Orientations />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/tests" element={<Test />} />
+          <Route path="/tests-orientations" element={<Testsorientations />} />
+          <Route path="/universites-formations" element={<UniversitiesPage />} />
+          <Route path="/bourses-aides" element={<BoursesAides />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<Faq />} />
+          <Route path="/guide-riasec" element={<GuideRiasec />} />
+        </Routes>
+        <Footer />
+      </Router>
+    </AuthProvider>
   );
 }
 

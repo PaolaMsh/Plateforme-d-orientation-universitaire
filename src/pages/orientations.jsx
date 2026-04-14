@@ -1,12 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/orientations.css';
+import api from '../services/api';
 
 const Orientations = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [results, setResults] = useState(null);
   const [activeTab, setActiveTab] = useState('radar');
+  const [saving, setSaving] = useState(false);
+
+  const types = [
+    { type: 'R', name: 'Réaliste', icon: '🛠️', color: '#EF4444', bgColor: '#FEF2F2', desc: 'Pratique, aime travailler avec des outils' },
+    { type: 'I', name: 'Investigateur', icon: '🔬', color: '#3B82F6', bgColor: '#EFF6FF', desc: 'Curieux, aime résoudre des problèmes' },
+    { type: 'A', name: 'Artistique', icon: '🎨', color: '#8B5CF6', bgColor: '#F5F3FF', desc: 'Créatif, aime s\'exprimer' },
+    { type: 'S', name: 'Social', icon: '🤝', color: '#10B981', bgColor: '#ECFDF5', desc: 'Aime aider les autres' },
+    { type: 'E', name: 'Entreprenant', icon: '🚀', color: '#F59E0B', bgColor: '#FFFBEB', desc: 'Leader, prend des initiatives' },
+    { type: 'C', name: 'Conventionnel', icon: '📊', color: '#6366F1', bgColor: '#EEF2FF', desc: 'Organisé, méthodique' }
+  ];
+
+  // Sauvegarder les résultats dans le backend
+  const saveResults = async (resultsData) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      setSaving(true);
+      await api.post('/orientation/save', resultsData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Résultats sauvegardés avec succès');
+    } catch (error) {
+      console.error('Erreur sauvegarde:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     const stateResults = location.state?.results;
@@ -14,6 +43,7 @@ const Orientations = () => {
     
     if (stateResults) {
       setResults(stateResults);
+      saveResults(stateResults);
     } else if (storedResults) {
       setResults(JSON.parse(storedResults));
     } else {
@@ -31,48 +61,82 @@ const Orientations = () => {
 
   const { riasec, code } = results;
 
-  const types = [
-    { type: 'R', name: 'Réaliste', icon: '🛠️', color: '#FF6B6B', desc: 'Pratique, aime travailler avec des outils' },
-    { type: 'I', name: 'Investigateur', icon: '🔬', color: '#4ECDC4', desc: 'Curieux, aime résoudre des problèmes' },
-    { type: 'A', name: 'Artistique', icon: '🎨', color: '#FFE66D', desc: 'Créatif, aime s\'exprimer' },
-    { type: 'S', name: 'Social', icon: '🤝', color: '#95E77E', desc: 'Aime aider les autres' },
-    { type: 'E', name: 'Entreprenant', icon: '📈', color: '#FF9F4A', desc: 'Leader, prend des initiatives' },
-    { type: 'C', name: 'Conventionnel', icon: '📊', color: '#A78BFA', desc: 'Organisé, méthodique' }
-  ];
-
   const careersByType = {
-    R: ['Mécanicien', 'Électricien', 'Ingénieur civil', 'Technicien', 'Agriculteur'],
-    I: ['Médecin', 'Chercheur', 'Biologiste', 'Data Scientist', 'Pharmacien'],
+    R: ['Ingénieur mécanique', 'Architecte technicien', 'Technicien supérieur en maintenance', 'Chef de chantier', 'Concepteur produit'],
+    I: ['Chercheur', 'Data Scientist', 'Médecin', 'Biologiste', 'Pharmacien'],
     A: ['Designer', 'Architecte', 'Musicien', 'Écrivain', 'Photographe'],
     S: ['Enseignant', 'Psychologue', 'Infirmier', 'Travailleur social', 'Coach'],
     E: ['Entrepreneur', 'Manager', 'Commercial', 'Avocat', 'Consultant'],
-    C: ['Comptable', 'Analyste financier', 'Secrétaire', 'Administrateur']
+    C: ['Comptable', 'Analyste financier', 'Secrétaire de direction', 'Administrateur', 'Auditeur']
   };
 
   const formationsByType = {
-    R: ['BTS Maintenance', 'Licence Génie civil', 'DUT Génie industriel'],
-    I: ['Doctorat', 'Master Sciences', 'École de médecine', 'Master Data Science'],
-    A: ['École des Beaux-Arts', 'Master Design', 'Licence Arts'],
-    S: ['Master Psychologie', 'École normale', 'Licence Sociologie'],
-    E: ['École de commerce', 'Master Management', 'Licence Économie'],
-    C: ['BTS Comptabilité', 'Licence Gestion', 'Master Finance']
+    R: ['Génie Civil', 'Mécanique industrielle', 'Maintenance aéronautique', 'Électrotechnique', 'Architecture technique'],
+    I: ['Doctorat', 'Master Sciences', 'École de médecine', 'Master Data Science', 'Biotechnologies'],
+    A: ['École des Beaux-Arts', 'Master Design', 'Licence Arts', 'Architecture d\'intérieur', 'Design graphique'],
+    S: ['Master Psychologie', 'École normale', 'Licence Sociologie', 'Travail social', 'Coaching professionnel'],
+    E: ['École de commerce', 'Master Management', 'Licence Économie', 'MBA', 'Entrepreneuriat'],
+    C: ['BTS Comptabilité', 'Licence Gestion', 'Master Finance', 'Audit', 'Contrôle de gestion']
+  };
+
+  const riasecData = {
+    R: {
+      strengths: ['Sens pratique et concret', 'Dextérité manuelle et technique', 'Orientation vers les résultats tangibles'],
+      improvements: ['Développer la communication verbale', 'Travailler l\'abstraction et la conceptualisation']
+    },
+    I: {
+      strengths: ['Curiosité intellectuelle très développée', 'Esprit critique et analytique', 'Capacité à résoudre des problèmes complexes'],
+      improvements: ['Développer les compétences relationnelles', 'Apprendre à vulgariser des idées complexes']
+    },
+    A: {
+      strengths: ['Imagination et créativité débordante', 'Sensibilité artistique développée', 'Originalité et innovation'],
+      improvements: ['Structurer et organiser ses projets', 'Respecter des délais et contraintes']
+    },
+    S: {
+      strengths: ['Empathie et écoute active', 'Capacité à travailler en équipe', 'Sens du relationnel développé'],
+      improvements: ['Apprendre à dire non et poser des limites', 'Développer l\'autonomie et le travail solo']
+    },
+    E: {
+      strengths: ['Leadership naturel et charisme', 'Capacité à prendre des initiatives', 'Persuasion et influence'],
+      improvements: ['Apprendre à déléguer et faire confiance', 'Développer l\'écoute active']
+    },
+    C: {
+      strengths: ['Organisation et méthode irréprochables', 'Rigueur et précision', 'Fiabilité et sens des responsabilités'],
+      improvements: ['Développer la flexibilité et l\'adaptabilité', 'Apprendre à sortir des cadres établis']
+    }
   };
 
   const sortedTypes = [...types].sort((a, b) => riasec[b.type] - riasec[a.type]);
   const dominantTypes = sortedTypes.slice(0, 3);
+  const topType = dominantTypes[0];
 
   return (
     <div className="orientations-page">
       <div className="orientations-wrapper">
-        {/* En-tête */}
         <div className="orientations-header">
-          <h1>🎉 Votre Profil RIASEC</h1>
-          <p>Découvrez les métiers et formations qui vous correspondent</p>
+          <h1>Mon rapport d'orientation</h1>
+          <p>Test effectué le {new Date().toLocaleDateString()} - Version complète RIASEC</p>
+          {saving && <p style={{ color: 'green' }}>Sauvegarde en cours...</p>}
         </div>
 
-        <div className="code-card">
-          <span className="code-label">Votre code</span>
-          <span className="code-value">{code}</span>
+        <div className="resum-card">
+          <div className="resum-section">
+            <h2 className="resum-label">Résumé du test</h2>
+          </div>
+          <div className="textresum-section">
+            <h3 className="text-label">Synthèse de l'évaluation</h3>
+            <p>Test d'intérêts professionnels et de personnalité basé sur la typologie de Holland (RIASEC).</p>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <span className="stat-label">🎯 Code RIASEC</span>
+                <span className="stat-value">{code}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">📊 Type dominant</span>
+                <span className="stat-value">{topType.name} ({riasec[topType.type]}%)</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="tabs">
@@ -109,11 +173,11 @@ const Orientations = () => {
             <h3>✨ Vos types dominants</h3>
             <div className="dominants">
               {dominantTypes.map((type, idx) => (
-                <div key={type.type} className="dominant-card" style={{ borderColor: type.color }}>
+                <div key={type.type} className="dominant-card" style={{ borderColor: type.color, backgroundColor: `${type.color}10` }}>
                   <div className="dominant-rank">#{idx + 1}</div>
                   <div className="dominant-icon">{type.icon}</div>
                   <div className="dominant-name">{type.name}</div>
-                  <div className="dominant-score">{riasec[type.type]}%</div>
+                  <div className="dominant-score" style={{ color: type.color }}>{riasec[type.type]}%</div>
                 </div>
               ))}
             </div>
@@ -122,7 +186,7 @@ const Orientations = () => {
 
         {activeTab === 'careers' && (
           <div className="tab-content">
-            <h3>Métiers recommandés</h3>
+            <h3>💼 Métiers recommandés</h3>
             {dominantTypes.map(type => (
               <div key={type.type} className="career-group">
                 <div className="career-group-header" style={{ backgroundColor: `${type.color}15`, borderColor: type.color }}>
@@ -140,7 +204,7 @@ const Orientations = () => {
 
         {activeTab === 'formations' && (
           <div className="tab-content">
-            <h3>Formations recommandées</h3>
+            <h3>🎓 Formations recommandées</h3>
             {dominantTypes.map(type => (
               <div key={type.type} className="formation-group">
                 <div className="formation-group-header" style={{ backgroundColor: `${type.color}15`, borderColor: type.color }}>
@@ -153,22 +217,6 @@ const Orientations = () => {
                 </div>
               </div>
             ))}
-
-            <h3>🏫 Établissements au Bénin</h3>
-            <div className="schools-grid">
-              <div className="school-card">
-                <h4>UAC - Abomey-Calavi</h4>
-                <p>Sciences, Lettres, Droit, Economie</p>
-              </div>
-              <div className="school-card">
-                <h4>ESGIS - Cotonou</h4>
-                <p>Informatique, Gestion, Marketing</p>
-              </div>
-              <div className="school-card">
-                <h4>IST - Porto-Novo</h4>
-                <p>Génie civil, Informatique</p>
-              </div>
-            </div>
 
             <div className="action-buttons">
               <button className="btn-print" onClick={() => window.print()}>🖨️ Imprimer</button>

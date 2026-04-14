@@ -1,24 +1,24 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Ajout de useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import api from "../services/api";
 
 const RegisterPage = () => {
-  const navigate = useNavigate(); // Ajout du hook de navigation
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState(""); // Pour afficher les erreurs
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Validation des mots de passe
     if (password !== confirmPassword) {
       setError("Les mots de passe ne correspondent pas");
       return;
@@ -31,14 +31,18 @@ const RegisterPage = () => {
 
     setIsLoading(true);
 
-    // Simulation d'inscription (à remplacer par ton appel API)
-    setTimeout(() => {
-      console.log("Inscription avec:", { email, password });
+    try {
+      await api.post('/auth/register', {
+        email,
+        password
+      });
       
-      // Redirection vers la page de connexion après inscription réussie
       navigate("/login");
+    } catch (error) {
+      setError(error.response?.data?.message || "Erreur lors de l'inscription");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

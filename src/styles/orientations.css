@@ -7,11 +7,25 @@
 .orientations-wrapper {
   max-width: 900px;
   margin: 0 auto;
+  margin-top: 80px;
+}
+
+.resum-label {
+  display: inline-block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1E293B;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .orientations-header {
   text-align: center;
   margin-bottom: 2rem;
+  border: 2px solid #141465;
+  border-radius: 20px;
+  padding: 1.5rem;
+  background: rgba(51, 71, 223, 0.8);
 }
 
 .orientations-header h1 {
@@ -19,27 +33,203 @@
   color: #1a1a2e;
 }
 
-.code-card {
-  background: linear-gradient(135deg, #6246E5, #8B6FF5);
-  border-radius: 20px;
+.textresum-section {
+  background: white;
+  border-radius: 16px;
   padding: 1.5rem;
-  text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.code-label {
+.text-label {
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #1E293B;
+  padding-bottom: 0.5rem;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.stat-item {
+  background: #F8FAFC;
+  padding: 0.8rem;
+  border-radius: 8px;
+}
+
+.stat-label {
   display: block;
+  font-size: 0.7rem;
+  color: #64748B;
+  margin-bottom: 0.3rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 0.2rem;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.indicators-simple {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.indicator-simple-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem;
+  background: #F8FAFC;
+  border-radius: 8px;
+}
+
+.indicator-simple-label {
   font-size: 0.8rem;
-  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+  color: #475569;
 }
 
-.code-value {
-  font-size: 3rem;
-  font-weight: 800;
-  color: white;
-  letter-spacing: 4px;
+.indicator-simple-value {
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
+.details-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.details-item {
+  margin-bottom: 1rem;
+}
+
+.details-label {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1E293B;
+  border-bottom: 2px solid #6246E5;
+  padding-bottom: 0.5rem;
+}
+
+.details-text {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1rem 0;
+}
+
+.strengths-col, .improvements-col {
+  background: #F8FAFC;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1E293B;
+  margin-bottom: 0.8rem;
+  display: block;
+}
+
+.points-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.points-list li {
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.points-list li:last-child {
+  border-bottom: none;
+}
+
+.observation-box {
+  background: #F1F5F9;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  color: #475569;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Analysis card */
+.analysis-card {
+  background: #F8FAFC;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid;
+}
+
+.analysis-card h4 {
+  margin-bottom: 0.8rem;
+  font-size: 1rem;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.analysis-strengths, .analysis-improvements {
+  font-size: 0.8rem;
+}
+
+.analysis-strengths strong, .analysis-improvements strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #1E293B;
+}
+
+.analysis-strengths ul, .analysis-improvements ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.analysis-strengths li, .analysis-improvements li {
+  margin: 0.3rem 0;
+  color: #475569;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .details-text {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .analysis-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+  
+  .indicators-simple {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .tabs {
   display: flex;
   gap: 0.5rem;

@@ -4,6 +4,7 @@ import { useAuth } from "../context/authContext";
 import "../styles/auth.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import api from "../services/api";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -19,17 +20,20 @@ const LoginPage = () => {
     setError("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      const mockUser = {
-        id: 1,
-        email: email,
-      };
-      const mockToken = "fake-jwt-token-123456";
-
-      login(mockUser, mockToken);
+    try {
+      const response = await api.post('/auth/login', {
+        email,
+        password
+      });
+      
+      const { user, token } = response.data;
+      login(user, token);
       navigate("/accueil");
+    } catch (error) {
+      setError(error.response?.data?.message || "Email ou mot de passe incorrect");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

@@ -1,99 +1,48 @@
-// context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
-    // Vérifier le token au chargement
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Récupérer les infos utilisateur
+      const fetchUser = async () => {
+        try {
+          const response = await api.get('/auth/me');
+          setUser(response.data);
+        } catch (error) {
+          console.error('Erreur récupération utilisateur:', error);
+          logout();
+        }
+      };
+      fetchUser();
     }
-    setIsLoading(false);
-  }, []);
+  }, [token]);
 
-  const login = (userData, userToken) => {
+  const login = (userData, authToken) => {
     setUser(userData);
-    setToken(userToken);
-    localStorage.setItem('token', userToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    setToken(authToken);
+    localStorage.setItem('token', authToken);
+    api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    delete api.defaults.headers.common['Authorization'];
   };
 
-  const isAuthenticated = !!token;
-
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <div>Chargement...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/auth-login" replace />;
-  }
-
-  return children;
-};
-
-export const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <div>Chargement...</div>
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/accueil" replace />;
-  }
-
-  return children;
 };
