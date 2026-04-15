@@ -14,16 +14,14 @@ import Testsorientations from './pages/tests-orientations';
 import UniversitiesPage from './pages/universites-formations';
 import HeaderParent from './components/headerParent';
 import Footer from './components/footer';
-import BoursesAides from './pages/bourses-aides';
-import Contact from './pages/contact';
-import Faq from './pages/faq';
-import GuideRiasec from './pages/guide-riasec';
+import ScrollToTop from './components/ScrollToTop';
 
-
+// Composant pour les routes protégées
 const ProtectedRoute = ({ children }) => {
-  const { token } = useAuth();
+  const { isAuthenticated, token } = useAuth();
+  const isAuth = isAuthenticated || token;
   
-  if (!token) {
+  if (!isAuth) {
     return <Navigate to="/login" replace />;
   }
   
@@ -34,22 +32,55 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
+
         <HeaderParent />
         <Routes>
+          {/* SEULE L'ACCUEIL EST PUBLIQUE */}
           <Route path="/" element={<Navigate to="/accueil" replace />} />
           <Route path="/accueil" element={<Home />} />
+
+                    
+          {/* TOUTES LES AUTRES ROUTES SONT PROTÉGÉES */}
+          <Route path="/universites-formations" element={
+            <ProtectedRoute>
+              <UniversitiesPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/metiers-porteurs" element={
+            <ProtectedRoute>
+              <MetiersPorteurs />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/support" element={
+            <ProtectedRoute>
+              <Support />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/tests-orientations" element={
+            <ProtectedRoute>
+              <Testsorientations />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/tests" element={
+            <ProtectedRoute>
+              <Test />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/orientations" element={
+            <ProtectedRoute>
+              <Orientations />
+            </ProtectedRoute>
+          } />
+          
+          {/* Routes d'authentification */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/metiers-porteurs" element={<MetiersPorteurs />} />
-          <Route path="/orientations" element={<Orientations />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/tests" element={<Test />} />
-          <Route path="/tests-orientations" element={<Testsorientations />} />
-          <Route path="/universites-formations" element={<UniversitiesPage />} />
-          <Route path="/bourses-aides" element={<BoursesAides />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/faq" element={<Faq />} />
-          <Route path="/guide-riasec" element={<GuideRiasec />} />
         </Routes>
         <Footer />
       </Router>

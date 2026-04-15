@@ -23,15 +23,38 @@ const Testsorientations = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get('/tests/stats');
-        setStats(response.data);
+        // Récupérer le token
+        const token = localStorage.getItem('token');
+        
+        // Essayer de récupérer les stats avec le token si disponible
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        const response = await api.get('/tests/stats', { headers });
+        
+        // Adapter selon la structure de la réponse
+        if (response.data.success && response.data.data) {
+          setStats({
+            totalTests: response.data.data.totalTests || response.data.data.total || 12543,
+            avgTime: response.data.data.avgTime || response.data.data.averageTime || 12
+          });
+        } else if (response.data.totalTests) {
+          setStats({
+            totalTests: response.data.totalTests,
+            avgTime: response.data.avgTime || 12
+          });
+        } else {
+          // Données par défaut
+          setStats({ totalTests: 12543, avgTime: 12 });
+        }
       } catch (error) {
         console.error('Erreur chargement stats:', error);
+        // Données par défaut en cas d'erreur
         setStats({ totalTests: 12543, avgTime: 12 });
       } finally {
         setLoading(false);
       }
     };
+    
     fetchStats();
   }, []);
 
