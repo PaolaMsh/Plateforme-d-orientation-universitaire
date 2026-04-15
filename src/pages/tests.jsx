@@ -68,36 +68,25 @@ const Test = () => {
   const answered = Object.keys(answers).length;
   const progress = (answered / total) * 100;
 
-  const isPageComplete = (pageIndex) => {
-    const start = pageIndex * questionsPerPage;
-    const end = Math.min(start + questionsPerPage, questionsData.length);
-    const pageQuestions = questionsData.slice(start, end);
-    return pageQuestions.every((q) => answers[q.id]);
-  };
-
   const isCurrentPageComplete = () => currentQuestions.every((q) => answers[q.id]);
 
-  // Auto-advance seulement si activé (optionnel)
   useEffect(() => {
-    return () => {
+    if (isCurrentPageComplete()) {
       if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
-    };
-  }, []);
-
-  const handleAnswer = (questionId, value) => setAnswers((prev) => ({ ...prev, [questionId]: value }));
-
-  const handleNextPage = () => {
-    if (!isCurrentPageComplete()) {
-      alert("Veuillez répondre à toutes les questions de cette page");
-      return;
+      
+      if (currentPage + 1 < totalPages) {
+        autoAdvanceRef.current = setTimeout(() => {
+          setCurrentPage((prev) => prev + 1);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }, 600); 
+      } else if (answered === total) {
+        autoAdvanceRef.current = setTimeout(() => setShowConfirm(true), 600);
+      }
     }
-    
-    if (currentPage + 1 < totalPages) {
-      setCurrentPage(currentPage + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      setShowConfirm(true);
-    }
+  }, [answers, currentPage]);
+
+  const handleAnswer = (questionId, value) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handlePrevPage = () => {
@@ -165,12 +154,8 @@ const Test = () => {
           </div>
         </div>
 
-        {/* Indicateur de page - AJOUTÉ */}
         <div className="page-indicator-header">
           <span>Page {currentPage + 1} / {totalPages}</span>
-          {isCurrentPageComplete() && (
-            <span className="page-complete-badge">✓ Page complète !</span>
-          )}
         </div>
 
         <div className="questions-grid">
@@ -191,6 +176,10 @@ const Test = () => {
                     >
                       <div className="emotion-svg">{option.emoji}</div>
                       <span className="emotion-label">{option.label}</span>
+                      {/* Coche verte sur l'option sélectionnée */}
+                      {answers[question.id] === option.value && (
+                        <span className="check-mark">✓</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -199,7 +188,6 @@ const Test = () => {
           ))}
         </div>
 
-        {/* Boutons de navigation - AJOUTÉS */}
         <div className="pagination-nav">
           <button
             className="page-nav-btn prev-btn"
@@ -213,28 +201,12 @@ const Test = () => {
             {Array.from({ length: totalPages }).map((_, idx) => (
               <div
                 key={idx}
-                className={`page-dot ${currentPage === idx ? "active" : ""} ${isPageComplete(idx) ? "complete" : ""}`}
-                onClick={() => {
-                  if (isPageComplete(idx)) {
-                    setCurrentPage(idx);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  } else if (idx < currentPage) {
-                    setCurrentPage(idx);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  } else {
-                    alert("Veuillez répondre à toutes les questions de cette page avant de continuer");
-                  }
-                }}
+                className={`page-dot ${currentPage === idx ? "active" : ""}`}
               />
             ))}
           </div>
 
-          <button 
-            className="page-nav-btn next-btn" 
-            onClick={handleNextPage}
-          >
-            {currentPage + 1 === totalPages ? "Terminer →" : "Page suivante →"}
-          </button>
+          <div className="page-nav-placeholder" style={{ width: '120px' }} />
         </div>
 
         {showConfirm && (

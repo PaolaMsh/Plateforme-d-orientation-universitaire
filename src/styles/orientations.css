@@ -101,6 +101,11 @@
   font-weight: 700;
 }
 
+.details{
+  background: #F8FAFC;
+  border-radius: 8px;
+  }
+
 .details-section {
   background: white;
   border-radius: 16px;
@@ -159,18 +164,110 @@
   border-bottom: none;
 }
 
-.observation-box {
-  background: #F1F5F9;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 1rem;
-  color: #475569;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  font-style: italic;
+/* Hexagramme visuel */
+.hexagramme-visuel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 16px;
+  margin: 20px 0;
 }
 
-/* Analysis card */
+.hexagramme-types {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+  padding: 15px;
+  background: #f1f5f9;
+  border-radius: 12px;
+}
+
+.hexagramme-type {
+  font-size: 14px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Carte des dominantes */
+.carte-dominantes {
+  border-radius: 20px;
+  padding: 25px;
+  margin: 25px 0;
+  color: white;
+}
+
+.carte-title {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.carte-profil {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+}
+
+.profil-item {
+  text-align: center;
+}
+
+.profil-label {
+  display: block;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 5px;
+}
+
+.profil-value {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.scores-hexa {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+}
+
+.score-hexa-item {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.profil-description {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.interpretation-box {
+  background: rgba(0,0,0,0.2);
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .analysis-card {
   background: #F8FAFC;
   border-radius: 12px;
