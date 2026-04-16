@@ -600,7 +600,7 @@ const Orientations = () => {
                 🖨️ Imprimer le rapport
               </button>
               <button className="btn-retest" onClick={() => {
-                localStorage.removeItem('session_token');
+                localStorage.removeItem('session_token')
                 localStorage.removeItem('assessment_id');
                 navigate('/tests');
               }}>
