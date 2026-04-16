@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 
-const API_BASE_URL = 'http://10.48.73.80:3000/api/v1'; 
+const API_BASE_URL = 'http://192.168.150.134:3000/api/v1'; 
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -24,13 +24,10 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.code === 'ERR_NETWORK') {
-      console.error('❌ Impossible de se connecter au backend');
-      console.error('   Vérifie que :');
-      console.error('   1. Le backend est démarré');
-      console.error('   2. Les deux PCs sont sur le même réseau');
-      console.error('   3. L\'IP est correcte');
+  async (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

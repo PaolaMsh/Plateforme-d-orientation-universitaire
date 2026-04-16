@@ -6,236 +6,252 @@ import api from '../services/api';
 const Orientations = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [results, setResults] = useState(null);
   const [activeTab, setActiveTab] = useState('radar');
-  const [saving, setSaving] = useState(false);
-  const [apiData, setApiData] = useState(null);
-  const [behavioralData, setBehavioralData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Données provenant UNIQUEMENT de l'API
+  const [resultData, setResultData] = useState(null);
+  const [assessmentData, setAssessmentData] = useState(null);
+  const [progressData, setProgressData] = useState(null);
+  const [careers, setCareers] = useState([]);
+  const [trainingCenters, setTrainingCenters] = useState([]);
+  const [trainingPaths, setTrainingPaths] = useState([]);
 
   const types = [
-    { type: 'R', name: 'Réaliste', icon: '🛠️', color: '#EF4444', bgColor: '#FEF2F2', desc: 'Pratique, aime travailler avec des outils' },
-    { type: 'I', name: 'Investigateur', icon: '🔬', color: '#3B82F6', bgColor: '#EFF6FF', desc: 'Curieux, aime résoudre des problèmes' },
-    { type: 'A', name: 'Artistique', icon: '🎨', color: '#8B5CF6', bgColor: '#F5F3FF', desc: 'Créatif, aime s\'exprimer' },
-    { type: 'S', name: 'Social', icon: '🤝', color: '#10B981', bgColor: '#ECFDF5', desc: 'Aime aider les autres' },
-    { type: 'E', name: 'Entreprenant', icon: '🚀', color: '#F59E0B', bgColor: '#FFFBEB', desc: 'Leader, prend des initiatives' },
-    { type: 'C', name: 'Conventionnel', icon: '📊', color: '#6366F1', bgColor: '#EEF2FF', desc: 'Organisé, méthodique' }
+    { type: 'R', name: 'Réaliste', icon: '🛠️', color: '#EF4444', bgColor: '#FEF2F2', desc: 'Pratique, aime travailler avec des outils', details: 'Métiers manuels, techniques, concrets. Aime les activités physiques et les résultats tangibles.' },
+    { type: 'I', name: 'Investigateur', icon: '🔬', color: '#3B82F6', bgColor: '#EFF6FF', desc: 'Curieux, aime résoudre des problèmes', details: 'Métiers scientifiques, analytiques, de recherche. Aime observer, apprendre et résoudre des problèmes complexes.' },
+    { type: 'A', name: 'Artistique', icon: '🎨', color: '#8B5CF6', bgColor: '#F5F3FF', desc: 'Créatif, aime s\'exprimer', details: 'Métiers créatifs, artistiques, d\'expression. Aime l\'innovation, l\'originalité et la liberté d\'expression.' },
+    { type: 'S', name: 'Social', icon: '🤝', color: '#10B981', bgColor: '#ECFDF5', desc: 'Aime aider les autres', details: 'Métiers relationnels, éducatifs, de soin. Aime collaborer, enseigner et aider les autres à se développer.' },
+    { type: 'E', name: 'Entreprenant', icon: '🚀', color: '#F59E0B', bgColor: '#FFFBEB', desc: 'Leader, prend des initiatives', details: 'Métiers commerciaux, managériaux, de leadership. Aime convaincre, diriger et atteindre des objectifs.' },
+    { type: 'C', name: 'Conventionnel', icon: '📊', color: '#6366F1', bgColor: '#EEF2FF', desc: 'Organisé, méthodique', details: 'Métiers administratifs, de gestion, de données. Aime l\'ordre, la précision et les tâches structurées.' }
   ];
 
-  // Récupérer les résultats complets depuis l'API
-  const fetchFullResults = async (assessmentId, sessionToken) => {
+  // Appels API (identiques à avant)
+  const fetchResults = async (assessmentId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.get(`/orientation/results/${assessmentId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const response = await api.get(`/results/assessment/${assessmentId}`);
       if (response.data.success && response.data.data) {
-        setApiData(response.data.data);
-        
-        // Récupérer les données comportementales
-        const behavioralResponse = await api.get(`/orientation/behavioral/${sessionToken}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (behavioralResponse.data.success && behavioralResponse.data.data) {
-          setBehavioralData(behavioralResponse.data.data);
-        }
+        setResultData(response.data.data);
+        return response.data.data;
       }
-    } catch (error) {
-      console.error('Erreur récupération résultats détaillés:', error);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Erreur récupération résultats:", err);
     }
   };
 
-  // Sauvegarder les résultats dans le backend
-  const saveResults = async (resultsData, sessionToken = null) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
+  const fetchAssessment = async (assessmentId, sessionToken) => {
     try {
-      setSaving(true);
-      const payload = {
-        sessionToken: sessionToken || `tok_${Date.now()}`,
-        assessmentId: `assessment_${Date.now()}`,
-        subjectiveRanking: resultsData,
-        force: true
-      };
-      
-      const response = await api.post('/orientation/save', payload, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await api.get(`/assessments/${assessmentId}`, {
+        params: { sessionToken }
       });
-      
       if (response.data.success && response.data.data) {
-        const { assessment_id } = response.data.data;
-        fetchFullResults(assessment_id, payload.sessionToken);
+        setAssessmentData(response.data.data);
+        return response.data.data;
       }
-      
-      console.log('Résultats sauvegardés avec succès');
-    } catch (error) {
-      console.error('Erreur sauvegarde:', error);
-    } finally {
-      setSaving(false);
+    } catch (err) {
+      console.error("Erreur récupération assessment:", err);
+    }
+  };
+
+  const fetchProgress = async (assessmentId, sessionToken) => {
+    try {
+      const response = await api.get(`/assessments/${assessmentId}/progress`, {
+        params: { sessionToken }
+      });
+      if (response.data.success && response.data.data) {
+        setProgressData(response.data.data);
+        return response.data.data;
+      }
+    } catch (err) {
+      console.error("Erreur récupération progression:", err);
+    }
+  };
+
+  const fetchCareers = async () => {
+    try {
+      const response = await api.get('/careers', {
+        params: { activeOnly: true, limit: 50 }
+      });
+      if (response.data.success && response.data.data) {
+        setCareers(response.data.data);
+        return response.data.data;
+      }
+    } catch (err) {
+      console.error("Erreur récupération carrières:", err);
+    }
+  };
+
+  const fetchTrainingCenters = async () => {
+    try {
+      const response = await api.get('/training-centers', {
+        params: { activeOnly: true, limit: 20 }
+      });
+      if (response.data.success && response.data.data) {
+        setTrainingCenters(response.data.data);
+        return response.data.data;
+      }
+    } catch (err) {
+      console.error("Erreur récupération centres formation:", err);
+    }
+  };
+
+  const fetchTrainingPaths = async () => {
+    try {
+      const response = await api.get('/training-paths', {
+        params: { activeOnly: true, limit: 20 }
+      });
+      if (response.data.success && response.data.data) {
+        setTrainingPaths(response.data.data);
+        return response.data.data;
+      }
+    } catch (err) {
+      console.error("Erreur récupération parcours formation:", err);
     }
   };
 
   useEffect(() => {
-    const stateResults = location.state?.results;
-    const storedResults = localStorage.getItem('riasec_results');
-    const sessionToken = localStorage.getItem('session_token');
-    
-    if (stateResults) {
-      setResults(stateResults);
-      saveResults(stateResults, sessionToken);
-    } else if (storedResults) {
-      const parsedResults = JSON.parse(storedResults);
-      setResults(parsedResults);
-      // Essayer de récupérer les données API existantes
-      const savedAssessmentId = localStorage.getItem('assessment_id');
-      if (savedAssessmentId && sessionToken) {
-        fetchFullResults(savedAssessmentId, sessionToken);
-      } else {
+    const loadAllData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      const sessionToken = location.state?.sessionToken || localStorage.getItem('session_token');
+      const assessmentId = location.state?.assessmentId || localStorage.getItem('assessment_id');
+      
+      if (!sessionToken || !assessmentId) {
+        setError("Session introuvable. Veuillez recommencer le test.");
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        await Promise.all([
+          fetchResults(assessmentId),
+          fetchAssessment(assessmentId, sessionToken),
+          fetchProgress(assessmentId, sessionToken),
+          fetchCareers(),
+          fetchTrainingCenters(),
+          fetchTrainingPaths()
+        ]);
+      } catch (err) {
+        setError("Impossible de charger vos résultats.");
+      } finally {
         setLoading(false);
       }
-    } else {
-      navigate('/tests');
-    }
-  }, [location, navigate]);
+    };
+    
+    loadAllData();
+  }, [location]);
 
-  // Utiliser les données de l'API si disponibles, sinon les données locales
   const getScores = () => {
-    if (apiData?.riasecProfile?.scores) {
-      const scores = apiData.riasecProfile.scores;
-      return {
-        R: Math.round(scores.R * 100),
-        I: Math.round(scores.I * 100),
-        A: Math.round(scores.A * 100),
-        S: Math.round(scores.S * 100),
-        E: Math.round(scores.E * 100),
-        C: Math.round(scores.C * 100)
-      };
+    const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+    
+    if (resultData?.riasecProfile?.scores) {
+      const apiScores = resultData.riasecProfile.scores;
+      Object.keys(scores).forEach(key => {
+        scores[key] = apiScores[key] ? Math.round(apiScores[key] * 100) : 0;
+      });
+    } else if (resultData?.phase2_code) {
+      const code = resultData.phase2_code;
+      if (code[0]) scores[code[0]] = 90;
+      if (code[1]) scores[code[1]] = 70;
+      if (code[2]) scores[code[2]] = 50;
+    } else if (resultData?.phase1_code) {
+      const code = resultData.phase1_code;
+      if (code[0]) scores[code[0]] = 90;
+      if (code[1]) scores[code[1]] = 70;
+      if (code[2]) scores[code[2]] = 50;
     }
-    return results?.riasec || { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+    
+    return scores;
   };
 
   const getCode = () => {
-    if (apiData?.riasecProfile?.code) {
-      return apiData.riasecProfile.code;
-    }
-    return results?.code || '---';
+    return resultData?.phase2_code || resultData?.phase1_code || '---';
   };
 
-  const getCareerRecommendations = () => {
-    if (apiData?.careerRecommendations && apiData.careerRecommendations.length > 0) {
-      return apiData.careerRecommendations;
-    }
-    return null;
+  const getRecommendedCareers = () => {
+    const code = getCode();
+    if (!code || code === '---') return [];
+    
+    const recommended = careers.filter(career => {
+      if (!career.riasec_codes) return false;
+      return career.riasec_codes.some(riasecCode => code.includes(riasecCode));
+    });
+    
+    return recommended.slice(0, 12);
   };
 
-  const getActionPlan = () => {
-    if (apiData?.actionPlan && apiData.actionPlan.length > 0) {
-      return apiData.actionPlan;
-    }
-    return null;
-  };
-
-  const getPsychologicalProfile = () => {
-    if (apiData?.psychologicalProfile) {
-      return apiData.psychologicalProfile;
-    }
-    return null;
-  };
-
-  const getBehavioralObservations = () => {
-    if (behavioralData.length > 0) {
-      return behavioralData;
-    }
-    return null;
+  const getRecommendedTrainings = () => {
+    const recommendedCareers = getRecommendedCareers();
+    const careerIds = recommendedCareers.map(c => c.id);
+    
+    const recommended = trainingPaths.filter(path => 
+      careerIds.includes(path.career_id)
+    );
+    
+    return recommended.slice(0, 6);
   };
 
   const riasec = getScores();
   const code = getCode();
 
-  const sortedTypes = [...types].sort((a, b) => riasec[b.type] - riasec[a.type]);
+  const sortedTypes = [...types].sort((a, b) => (riasec[b.type] || 0) - (riasec[a.type] || 0));
   const dominantTypes = sortedTypes.slice(0, 3);
   const topType = dominantTypes[0];
   const secondType = dominantTypes[1];
   const thirdType = dominantTypes[2];
   
-  const totalQuestions = 18;
-  const coherence = apiData?.behavioralAnalysis?.confidence 
-    ? Math.round(apiData.behavioralAnalysis.confidence * 100) 
-    : Math.round(85 + Math.random() * 10);
-  const duration = Math.round(5 + Math.random() * 3);
-
+  const completionPercentage = progressData?.completionPercentage || assessmentData?.completion_percentage || 0;
+  const status = assessmentData?.status || progressData?.status || 'IN_PROGRESS';
+  
   const getInterpretation = () => {
-    if (apiData?.psychologicalProfile?.summary) {
-      return apiData.psychologicalProfile.summary;
-    }
-    
-    const type = topType.type;
+    if (!code || code === '---') return '';
+    const firstCode = code[0];
     const interpretations = {
-      I: 'Vous êtes un "penseur-acteur" : capacité à conceptualiser puis à concrétiser. Évitez les environnements trop routiniers qui ne stimuleraient pas votre curiosité intellectuelle.',
-      R: 'Vous êtes un "faiseur pragmatique" : vous aimez passer à l\'action et obtenir des résultats tangibles. Évitez les métiers trop théoriques ou administratifs.',
-      A: 'Vous êtes un "créatif expressif" : vous avez besoin d\'espace pour innover et vous exprimer. Évitez les environnements trop normés et hiérarchiques.',
-      S: 'Vous êtes un "aidant relationnel" : votre épanouissement passe par l\'aide aux autres. Évitez les métiers isolés ou sans contact humain.',
-      E: 'Vous êtes un "leader stratège" : vous aimez convaincre, diriger et atteindre des objectifs. Évitez les postes sans autonomie ni responsabilités.',
-      C: 'Vous êtes un "organisateur méthodique" : vous excellez dans les tâches structurées et l\'analyse de données. Évitez les environnements trop imprévisibles.'
+      'R': 'Vous êtes un "faiseur pragmatique" : vous aimez passer à l\'action et obtenir des résultats tangibles. Vous excellez dans les environnements concrets et pratiques.',
+      'I': 'Vous êtes un "penseur-acteur" : vous avez une grande capacité à conceptualiser puis à concrétiser vos idées. La recherche et l\'analyse vous stimulent.',
+      'A': 'Vous êtes un "créatif expressif" : vous avez besoin d\'espace pour innover et vous exprimer. L\'originalité est votre moteur.',
+      'S': 'Vous êtes un "aidant relationnel" : votre épanouissement passe par l\'aide aux autres et les interactions humaines.',
+      'E': 'Vous êtes un "leader stratège" : vous aimez convaincre, diriger et atteindre des objectifs ambitieux.',
+      'C': 'Vous êtes un "organisateur méthodique" : vous excellez dans les tâches structurées et l\'analyse de données.'
     };
-    return interpretations[type] || interpretations.C;
+    return interpretations[firstCode] || 'Profil équilibré avec des intérêts variés.';
   };
 
   const getProfilDescription = () => {
-    if (apiData?.psychologicalProfile?.keyTraits && apiData.psychologicalProfile.keyTraits.length > 0) {
-      return apiData.psychologicalProfile.keyTraits.join(' ');
+    if (!code || code === '---') return '';
+    
+    const descriptions = {
+      'R': 'Votre profil Réaliste montre une préférence pour les activités concrètes, manuelles et techniques. Vous aimez travailler avec vos mains, utiliser des outils et obtenir des résultats tangibles.',
+      'I': 'Votre profil Investigateur révèle une forte curiosité intellectuelle. Vous aimez analyser, comprendre et résoudre des problèmes complexes par l\'observation et l\'expérimentation.',
+      'A': 'Votre profil Artistique indique une sensibilité créative prononcée. Vous recherchez l\'originalité, l\'expression personnelle et l\'innovation dans ce que vous faites.',
+      'S': 'Votre profil Social démontre un grand intérêt pour les relations humaines. Vous aimez aider, enseigner, conseiller et collaborer avec les autres.',
+      'E': 'Votre profil Entreprenant montre un fort potentiel de leadership. Vous aimez convaincre, diriger, prendre des risques calculés et atteindre des objectifs.',
+      'C': 'Votre profil Conventionnel révèle une préférence pour l\'organisation et la précision. Vous aimez les tâches structurées, la gestion de données et le travail méthodique.'
+    };
+    
+    const firstCode = code[0];
+    let description = descriptions[firstCode] || '';
+    
+    if (code.length >= 2) {
+      const secondCode = code[1];
+      const combinations = {
+        'RI': ' La combinaison Réaliste-Investigateur est idéale pour les métiers d\'ingénierie et de recherche appliquée.',
+        'IR': ' La combinaison Investigateur-Réaliste est parfaite pour la R&D et les sciences appliquées.',
+        'AS': ' La combinaison Artistique-Social est excellente pour les métiers créatifs liés à l\'humain (design pédagogique, art-thérapie).',
+        'SE': ' La combinaison Social-Entreprenant est idéale pour le management, les RH et le conseil.',
+        'EC': ' La combinaison Entreprenant-Conventionnel est parfaite pour la gestion d\'entreprise et l\'administration.',
+        'CR': ' La combinaison Conventionnel-Réaliste est excellente pour les métiers techniques organisés (qualité, logistique).'
+      };
+      description += combinations[firstCode + secondCode] || combinations[secondCode + firstCode] || '';
     }
     
-    const types = [topType.type, secondType.type, thirdType.type];
-    if (types.includes('I') && types.includes('R')) {
-      return 'Votre profil met en évidence une forte appétence pour la **recherche**, l\'**analyse** et les activités **pratiques/manuelles**. Les métiers d\'ingénierie, de R&D ou de conception technique correspondent naturellement à vos aspirations.';
-    } else if (types.includes('I') && types.includes('A')) {
-      return 'Votre profil allie curiosité scientifique et sensibilité artistique. Vous êtes fait pour les métiers créatifs à forte composante technique : design UX, architecture, création multimédia.';
-    } else if (types.includes('E') && types.includes('S')) {
-      return 'Votre profil montre un fort potentiel pour le leadership et les relations humaines. Les métiers de manager, commercial, ou dans les ressources humaines vous correspondent particulièrement.';
-    } else if (types.includes('R') && types.includes('C')) {
-      return 'Votre profil allie pragmatisme et organisation. Vous excellez dans les métiers techniques nécessitant de la rigueur : qualité, maintenance, logistique, production.';
-    } else if (types.includes('A') && types.includes('E')) {
-      return 'Votre profil créatif et entreprenant est idéal pour l\'entrepreneuriat, le marketing digital, la publicité ou la direction artistique.';
-    }
-    return `Votre profil est dominé par les types ${topType.name}, ${secondType.name} et ${thirdType.name}. Cette combinaison est rare et montre une personnalité polyvalente capable de s\'adapter à divers environnements professionnels.`;
+    return description;
   };
 
-  const getStrengths = () => {
-    if (apiData?.psychologicalProfile?.keyTraits) {
-      return apiData.psychologicalProfile.keyTraits.map(trait => ({
-        title: trait,
-        description: trait
-      }));
-    }
-    return [
-      { title: 'Curiosité intellectuelle', description: 'Vous aimez résoudre des problèmes complexes et apprendre par vous-même.' },
-      { title: 'Pragmatisme', description: 'Capacité à passer à l\'action et à manipuler des outils concrets.' },
-      { title: 'Rigueur analytique', description: 'Vos réponses montrent une aisance avec les données et la logique.' }
-    ];
-  };
-
-  const getImprovements = () => {
-    if (apiData?.psychologicalProfile?.recommendations) {
-      return apiData.psychologicalProfile.recommendations.map(rec => ({
-        title: rec,
-        description: rec
-      }));
-    }
-    return [
-      { title: 'Travail collaboratif', description: 'Préférence marquée pour l\'autonomie, à équilibrer avec des projets d\'équipe.' },
-      { title: 'Communication', description: 'Développer l\'aisance à vulgariser vos idées complexes.' },
-      { title: 'Planification à long terme', description: 'Structurer vos projets créatifs avec des jalons clairs.' }
-    ];
-  };
-
-  const strengths = getStrengths();
-  const improvements = getImprovements();
+  const recommendedCareers = getRecommendedCareers();
+  const recommendedTrainings = getRecommendedTrainings();
 
   const getHexagonPoints = () => {
     const centerX = 120;
@@ -259,8 +275,8 @@ const Orientations = () => {
     const order = ['R', 'I', 'A', 'S', 'E', 'C'];
     
     return angles.map((angle, idx) => {
-      const score = riasec[order[idx]] / 100;
-      const radius = maxRadius * Math.min(score, 1);
+      const score = Math.min((riasec[order[idx]] || 0) / 100, 1);
+      const radius = maxRadius * score;
       const radian = (angle * Math.PI) / 180;
       return {
         x: centerX + radius * Math.cos(radian),
@@ -273,10 +289,26 @@ const Orientations = () => {
   const dataPoints = getDataPoints();
   const dataPointsString = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
 
-  if (loading && !results) {
+  if (loading) {
     return (
       <div className="orientations-container">
-        <div className="loader">Chargement de vos résultats...</div>
+        <div className="loader" style={{ textAlign: 'center', padding: '50px' }}>
+          <div className="spinner"></div>
+          <p>Analyse de votre profil RIASEC...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="orientations-container">
+        <div className="error" style={{ textAlign: 'center', padding: '50px' }}>
+          <p style={{ color: 'red' }}>{error}</p>
+          <button onClick={() => navigate('/tests')} className="btn-primary">
+            Retour au test
+          </button>
+        </div>
       </div>
     );
   }
@@ -284,74 +316,68 @@ const Orientations = () => {
   return (
     <div className="orientations-page">
       <div className="orientations-wrapper">
+        {/* Header amélioré */}
         <div className="orientations-header">
-          <h1>Mon rapport d'orientation</h1>
-          <p>Test effectué le {new Date().toLocaleDateString()} - Version complète RIASEC</p>
-          {saving && <p style={{ color: 'green' }}>Sauvegarde en cours...</p>}
-        </div>
-
-        <div className="resum-card">
-          <div className="resum-section">
-            <h2 className="resum-label">Résumé du test</h2>
-          </div>
-          <div className="textresum-section">
-            <h3 className="text-label">Synthèse de l'évaluation</h3>
-            <p>{apiData?.psychologicalProfile?.summary || 'Test d\'intérêts professionnels et de personnalité basé sur la typologie de Holland (RIASEC). Objectif : identifier vos affinités naturelles pour guider vos choix de formation et métier.'}</p>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-label">🎯 Code RIASEC</span>
-                <span className="stat-value">{code}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">📊 Type dominant</span>
-                <span className="stat-value">{topType.name} ({riasec[topType.type]}%)</span>
-              </div>
-              <div className='details'>
-                <strong className='detail'>⏱️ Durée de passation: {duration} minutes</strong><br />
-                <strong className='detail'>📝 Nombre de questions: {totalQuestions}</strong><br />
-                <strong className='detail'>📊 Cohérence des réponses: {coherence}%</strong>
-              </div>
-            </div>
+          <h1>🎯 Mon rapport d'orientation RIASEC</h1>
+          <p className="report-date">Test effectué le {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <div className="report-badge">
+            <span className="badge-code">Code RIASEC: <strong>{code}</strong></span>
+            <span className="badge-status">Statut: {status === 'COMPLETED' ? '✅ Terminé' : status === 'IN_PROGRESS' ? '🔄 En cours' : '⏸️ Abandonné'}</span>
           </div>
         </div>
 
-        {/* Section Détails & observations */}
-        <div className="details-section">
-          <div className="details-item">
-            <span className="details-label">📋 Détails & observations</span>
+        {/* Carte de synthèse améliorée */}
+        <div className="summary-card">
+          <div className="summary-header">
+            <h2>📋 Synthèse de votre évaluation</h2>
           </div>
-          
-          <div className="details-text">
-            <div className="strengths-col">
-              <span className="section-subtitle">✅ Points forts identifiés</span>
-              <ul className="points-list">
-                {strengths.map((strength, idx) => (
-                  <li key={idx}><strong>{strength.title} :</strong> {strength.description}</li>
-                ))}
-              </ul>
+          <div className="summary-content">
+            <div className="summary-text">
+              <p>Basé sur la typologie de Holland, votre code RIASEC est <strong className="highlight-code">{code}</strong>. Ce code représente vos intérêts professionnels dominants et vous guide vers des métiers et formations adaptés à votre personnalité.</p>
             </div>
-            <div className="improvements-col">
-              <span className="section-subtitle">🎯 Axes d'amélioration</span>
-              <ul className="points-list">
-                {improvements.map((improvement, idx) => (
-                  <li key={idx}><strong>{improvement.title} :</strong> {improvement.description}</li>
-                ))}
-              </ul>
+            <div className="stats-grid-enhanced">
+              <div className="stat-card">
+                <div className="stat-icon">🎯</div>
+                <div className="stat-info">
+                  <span className="stat-label">Code RIASEC</span>
+                  <strong className="stat-value-large">{code}</strong>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">⭐</div>
+                <div className="stat-info">
+                  <span className="stat-label">Type dominant</span>
+                  <strong className="stat-value">{topType?.name}</strong>
+                  <span className="stat-percent">{riasec[topType?.type] || 0}%</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">📊</div>
+                <div className="stat-info">
+                  <span className="stat-label">Progression</span>
+                  <strong className="stat-value">{completionPercentage}%</strong>
+                  <div className="mini-progress">
+                    <div className="mini-progress-fill" style={{ width: `${completionPercentage}%` }}></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Section Profil utilisateur — Hexagramme RIASEC */}
-          <div className="hexagramme-section">
-            <div className="hexagramme-header">
-              <h2 className="hexagramme-title">📊 Profil utilisateur — Hexagramme RIASEC</h2>
-            </div>
-            
-            <div className="hexagramme-visuel">
-              <svg width="280" height="280" viewBox="0 0 280 280" style={{ margin: '0 auto', display: 'block' }}>
+        {/* Hexagramme avec meilleure présentation */}
+        <div className="hexagramme-card">
+          <div className="card-header">
+            <h2>📊 Profil RIASEC - Hexagramme</h2>
+            <p>Visualisation de vos scores par type de personnalité</p>
+          </div>
+          <div className="hexagramme-content">
+            <div className="hexagramme-visual">
+              <svg width="300" height="300" viewBox="0 0 280 280">
                 <polygon
                   points={hexagonPoints.map(p => `${p.x},${p.y}`).join(' ')}
                   fill="none"
-                  stroke="#e2e8f0"
+                  stroke="#cbd5e1"
                   strokeWidth="2"
                 />
                 {hexagonPoints.map((point, idx) => (
@@ -361,14 +387,14 @@ const Orientations = () => {
                     y1="120"
                     x2={point.x}
                     y2={point.y}
-                    stroke="#e2e8f0"
+                    stroke="#cbd5e1"
                     strokeWidth="1"
                     strokeDasharray="4"
                   />
                 ))}
                 <polygon
                   points={dataPointsString}
-                  fill="rgba(59, 130, 246, 0.3)"
+                  fill="rgba(59, 130, 246, 0.25)"
                   stroke="#3B82F6"
                   strokeWidth="3"
                 />
@@ -377,207 +403,209 @@ const Orientations = () => {
                     key={idx}
                     cx={point.x}
                     cy={point.y}
-                    r="5"
+                    r="6"
                     fill="#3B82F6"
                     stroke="white"
                     strokeWidth="2"
                   />
                 ))}
-                <text x="120" y="15" textAnchor="middle" fontSize="12" fill="#EF4444" fontWeight="bold">R</text>
-                <text x="200" y="40" textAnchor="middle" fontSize="12" fill="#3B82F6" fontWeight="bold">I</text>
-                <text x="210" y="120" textAnchor="start" fontSize="12" fill="#8B5CF6" fontWeight="bold">A</text>
-                <text x="120" y="245" textAnchor="middle" fontSize="12" fill="#10B981" fontWeight="bold">S</text>
-                <text x="40" y="120" textAnchor="end" fontSize="12" fill="#F59E0B" fontWeight="bold">E</text>
-                <text x="30" y="40" textAnchor="middle" fontSize="12" fill="#6366F1" fontWeight="bold">C</text>
-                <circle cx="120" cy="120" r="4" fill="#64748b" />
+                <text x="120" y="12" textAnchor="middle" fontSize="13" fill="#EF4444" fontWeight="bold">R</text>
+                <text x="205" y="38" textAnchor="middle" fontSize="13" fill="#3B82F6" fontWeight="bold">I</text>
+                <text x="218" y="122" textAnchor="start" fontSize="13" fill="#8B5CF6" fontWeight="bold">A</text>
+                <text x="120" y="255" textAnchor="middle" fontSize="13" fill="#10B981" fontWeight="bold">S</text>
+                <text x="32" y="122" textAnchor="end" fontSize="13" fill="#F59E0B" fontWeight="bold">E</text>
+                <text x="25" y="38" textAnchor="middle" fontSize="13" fill="#6366F1" fontWeight="bold">C</text>
+                <circle cx="120" cy="120" r="4" fill="#94a3b8" />
               </svg>
             </div>
-            
-            <div className="hexagramme-types">
-              <div className="hexagramme-type" style={{ color: '#EF4444' }}>R - Réaliste</div>
-              <div className="hexagramme-type" style={{ color: '#3B82F6' }}>I - Investigateur</div>
-              <div className="hexagramme-type" style={{ color: '#8B5CF6' }}>A - Artistique</div>
-              <div className="hexagramme-type" style={{ color: '#10B981' }}>S - Social</div>
-              <div className="hexagramme-type" style={{ color: '#F59E0B' }}>E - Entreprenant</div>
-              <div className="hexagramme-type" style={{ color: '#6366F1' }}>C - Conventionnel</div>
+            <div className="hexagramme-legend">
+              {types.map(type => (
+                <div key={type.type} className="legend-item">
+                  <span className="legend-color" style={{ backgroundColor: type.color }}></span>
+                  <span className="legend-type">{type.type}</span>
+                  <span className="legend-name">{type.name}</span>
+                  <span className="legend-score">{riasec[type.type] || 0}%</span>
+                </div>
+              ))}
             </div>
-          </div>
-
-          {/* Section Votre carte des dominantes */}
-          <div className="carte-dominantes">
-            <div className="carte-header">
-              <h2 className="carte-title">🗺️ Votre carte des dominantes</h2>
-            </div>
-            
-            <div className="carte-profil">
-              <div className="profil-item">
-                <span className="profil-label">Votre profil</span>
-                <span className="profil-value">{topType.name}</span>
-              </div>
-              <div className="profil-item">
-                <span className="profil-label">Votre profil secondaire</span>
-                <span className="profil-value">{secondType.name}</span>
-              </div>
-            </div>
-
-            <div className="scores-hexa">
-              <div className="score-hexa-item" style={{ color: types.find(t => t.type === 'I')?.color }}>
-                Investigateur ({riasec.I})
-              </div>
-              <div className="score-hexa-item" style={{ color: types.find(t => t.type === 'R')?.color }}>
-                Réaliste ({riasec.R})
-              </div>
-              <div className="score-hexa-item" style={{ color: types.find(t => t.type === 'E')?.color }}>
-                Entreprenant ({riasec.E})
-              </div>
-            </div>
-
-            <div className="profil-description">
-              <p>{getProfilDescription()}</p>
-            </div>
-
-            <div className="interpretation-box">
-              <strong>📖 Interprétation :</strong> {getInterpretation()}
-            </div>
-          </div>
-
-          <div className="observation-box">
-            <em>
-              💡 Observation comportementale : {getBehavioralObservations()?.join(' ') || 'Cohérence élevée dans vos réponses, pas de biais de désirabilité sociale. Vous semblez authentique dans vos préférences.'}
-            </em>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="tabs">
-          <button className={`tab ${activeTab === 'radar' ? 'active' : ''}`} onClick={() => setActiveTab('radar')}>
-            📊 Profil détaillé
+        {/* Section profil améliorée */}
+        <div className="profile-card">
+          <div className="card-header">
+            <h2>🗺️ Analyse détaillée de votre profil</h2>
+          </div>
+          
+          <div className="dominant-types">
+            <h3>✨ Vos types dominants</h3>
+            <div className="dominant-cards">
+              {dominantTypes.map((type, idx) => (
+                <div key={type.type} className="dominant-card-enhanced" style={{ borderTopColor: type.color }}>
+                  <div className="dominant-rank">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</div>
+                  <div className="dominant-icon" style={{ backgroundColor: type.color + '20' }}>
+                    <span style={{ fontSize: '32px' }}>{type.icon}</span>
+                  </div>
+                  <div className="dominant-info">
+                    <div className="dominant-name">{type.name}</div>
+                    <div className="dominant-score">{riasec[type.type] || 0}%</div>
+                    <div className="dominant-bar">
+                      <div className="dominant-bar-fill" style={{ width: `${riasec[type.type] || 0}%`, backgroundColor: type.color }}></div>
+                    </div>
+                    <div className="dominant-desc">{type.details}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="profil-description-enhanced">
+            <h3>📖 Interprétation de votre profil</h3>
+            <p>{getProfilDescription()}</p>
+            <div className="interpretation-highlight">
+              <strong>💡 À retenir :</strong> {getInterpretation()}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs améliorés */}
+        <div className="tabs-enhanced">
+          <button 
+            className={`tab-enhanced ${activeTab === 'radar' ? 'active' : ''}`}
+            onClick={() => setActiveTab('radar')}
+          >
+            <span className="tab-icon">📊</span>
+            <span>Scores détaillés</span>
           </button>
-          <button className={`tab ${activeTab === 'careers' ? 'active' : ''}`} onClick={() => setActiveTab('careers')}>
-            💼 Métiers recommandés
+          <button 
+            className={`tab-enhanced ${activeTab === 'careers' ? 'active' : ''}`}
+            onClick={() => setActiveTab('careers')}
+          >
+            <span className="tab-icon">💼</span>
+            <span>Métiers recommandés</span>
           </button>
-          <button className={`tab ${activeTab === 'formations' ? 'active' : ''}`} onClick={() => setActiveTab('formations')}>
-            🎓 Formations recommandées
+          <button 
+            className={`tab-enhanced ${activeTab === 'formations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('formations')}
+          >
+            <span className="tab-icon">🎓</span>
+            <span>Formations</span>
           </button>
         </div>
 
         {activeTab === 'radar' && (
-          <div className="tab-content">
-            <h3>Vos scores par type</h3>
-            <div className="scores-list">
+          <div className="tab-content-enhanced">
+            <h3>📈 Vos scores par type RIASEC</h3>
+            <div className="scores-list-enhanced">
               {types.map(type => (
-                <div key={type.type} className="score-item">
-                  <div className="score-header">
-                    <span className="score-icon">{type.icon}</span>
-                    <span className="score-name">{type.name}</span>
-                    <span className="score-percent">{riasec[type.type]}%</span>
+                <div key={type.type} className="score-card">
+                  <div className="score-card-header">
+                    <div className="score-icon" style={{ backgroundColor: type.bgColor }}>
+                      <span style={{ fontSize: '24px' }}>{type.icon}</span>
+                    </div>
+                    <div className="score-info">
+                      <div className="score-name">{type.name} ({type.type})</div>
+                      <div className="score-percent">{riasec[type.type] || 0}%</div>
+                    </div>
                   </div>
-                  <div className="score-bar-bg">
-                    <div className="score-bar-fill" style={{ width: `${riasec[type.type]}%`, backgroundColor: type.color }}></div>
+                  <div className="score-bar-container">
+                    <div className="score-bar" style={{ width: `${riasec[type.type] || 0}%`, backgroundColor: type.color }}></div>
                   </div>
-                  <p className="score-desc">{type.desc}</p>
+                  <p className="score-desc-enhanced">{type.desc}</p>
+                  <details className="score-details">
+                    <summary>En savoir plus</summary>
+                    <p>{type.details}</p>
+                  </details>
                 </div>
               ))}
             </div>
-
-            <h3>✨ Vos types dominants</h3>
-            <div className="dominants">
-              {dominantTypes.map((type, idx) => (
-                <div key={type.type} className="dominant-card" style={{ borderColor: type.color, backgroundColor: `${type.color}10` }}>
-                  <div className="dominant-rank">#{idx + 1}</div>
-                  <div className="dominant-icon">{type.icon}</div>
-                  <div className="dominant-name">{type.name}</div>
-                  <div className="dominant-score" style={{ color: type.color }}>{riasec[type.type]}%</div>
-                </div>
-              ))}
-            </div>
-
-            <h3>📋 Analyse détaillée de votre profil</h3>
-            {dominantTypes.map((type, idx) => (
-              <div key={type.type} className="analysis-card" style={{ borderLeftColor: type.color }}>
-                <h4 style={{ color: type.color }}>{idx === 0 ? '①' : idx === 1 ? '②' : '③'} Type {type.name} ({riasec[type.type]}/100)</h4>
-                <div className="analysis-grid">
-                  <div className="analysis-strengths">
-                    <strong>✅ Points forts :</strong>
-                    <ul>
-                      <li>Capacité naturelle dans les domaines {type.name === 'Investigateur' ? 'scientifiques et analytiques' : 
-                        type.name === 'Réaliste' ? 'pratiques et concrets' :
-                        type.name === 'Artistique' ? 'créatifs et expressifs' :
-                        type.name === 'Social' ? 'relationnels et humains' :
-                        type.name === 'Entreprenant' ? 'commerciaux et stratégiques' :
-                        'administratifs et structurés'}</li>
-                    </ul>
-                  </div>
-                  <div className="analysis-improvements">
-                    <strong>🎯 Axes d'amélioration :</strong>
-                    <ul>
-                      <li>Développer les compétences dans les types moins représentés</li>
-                      <li>Chercher des complémentarités avec d'autres profils</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {getActionPlan() && (
-              <>
-                <h3>📋 Plan d'action</h3>
-                <ul className="action-plan-list">
-                  {getActionPlan().map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                </ul>
-              </>
-            )}
           </div>
         )}
 
         {activeTab === 'careers' && (
-          <div className="tab-content">
-            <h3>💼 Métiers recommandés</h3>
-            {getCareerRecommendations() ? (
-              <div className="career-list-api">
-                {getCareerRecommendations().map((career, idx) => (
-                  <div key={idx} className="career-item-api">▹ {career}</div>
-                ))}
-              </div>
-            ) : (
-              dominantTypes.map(type => (
-                <div key={type.type} className="career-group">
-                  <div className="career-group-header" style={{ backgroundColor: `${type.color}15`, borderColor: type.color }}>
-                    <span>{type.icon}</span> Type {type.name}
+          <div className="tab-content-enhanced">
+            <h3>💼 Métiers recommandés pour le profil <span className="code-highlight">{code}</span></h3>
+            <div className="careers-grid">
+              {recommendedCareers.length > 0 ? (
+                recommendedCareers.map((career, idx) => (
+                  <div key={idx} className="career-card">
+                    <div className="career-rank">{idx + 1}</div>
+                    <div className="career-info">
+                      <div className="career-name">{career.name}</div>
+                      {career.category && <div className="career-category">{career.category}</div>}
+                      {career.riasec_codes && (
+                        <div className="career-codes">
+                          {career.riasec_codes.map(c => (
+                            <span key={c} className="code-tag">{c}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="career-list">
-                    {careersByType[type.type].map((career, idx) => (
-                      <div key={idx} className="career-item">▹ {career}</div>
-                    ))}
-                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <p>Aucune recommandation disponible pour le moment.</p>
+                  <p>Les métiers seront bientôt disponibles selon votre profil.</p>
                 </div>
-              ))
-            )}
+              )}
+            </div>
           </div>
         )}
 
         {activeTab === 'formations' && (
-          <div className="tab-content">
-            <h3>🎓 Formations recommandées</h3>
-            {dominantTypes.map(type => (
-              <div key={type.type} className="formation-group">
-                <div className="formation-group-header" style={{ backgroundColor: `${type.color}15`, borderColor: type.color }}>
-                  <span>{type.icon}</span> Type {type.name}
+          <div className="tab-content-enhanced">
+            <h3>🎓 Parcours de formation recommandés</h3>
+            <div className="formations-list">
+              {recommendedTrainings.length > 0 ? (
+                recommendedTrainings.map((training, idx) => (
+                  <div key={idx} className="formation-card">
+                    <div className="formation-icon">📖</div>
+                    <div className="formation-info">
+                      <div className="formation-name">{training.name}</div>
+                      {training.institution_id && (
+                        <div className="formation-institution">
+                          {trainingCenters.find(c => c.id === training.institution_id)?.name || 'Établissement partenaire'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <p>Explorez nos partenaires formations pour découvrir les parcours adaptés à votre profil.</p>
                 </div>
-                <div className="formation-list">
-                  {formationsByType[type.type].map((formation, idx) => (
-                    <div key={idx} className="formation-item">📖 {formation}</div>
+              )}
+            </div>
+
+            {trainingCenters.length > 0 && (
+              <>
+                <h3>🏫 Centres de formation partenaires</h3>
+                <div className="centers-grid">
+                  {trainingCenters.slice(0, 6).map((center, idx) => (
+                    <div key={idx} className="center-card">
+                      <div className="center-icon">🏛️</div>
+                      <div className="center-info">
+                        <div className="center-name">{center.name}</div>
+                        <div className="center-location">{center.city}{center.department ? ` - ${center.department}` : ''}</div>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            ))}
+              </>
+            )}
 
-            <div className="action-buttons">
-              <button className="btn-print" onClick={() => window.print()}>🖨️ Imprimer le rapport</button>
-              <button className="btn-retest" onClick={() => navigate('/tests')}>🔄 Refaire le test</button>
-              <button className="btn-schools" onClick={() => navigate('/universites-formations')}>🏫 Voir les écoles</button>
+            <div className="action-buttons-enhanced">
+              <button className="btn-print" onClick={() => window.print()}>
+                🖨️ Imprimer le rapport
+              </button>
+              <button className="btn-retest" onClick={() => {
+                localStorage.removeItem('session_token');
+                localStorage.removeItem('assessment_id');
+                navigate('/tests');
+              }}>
+                🔄 Refaire le test
+              </button>
             </div>
           </div>
         )}

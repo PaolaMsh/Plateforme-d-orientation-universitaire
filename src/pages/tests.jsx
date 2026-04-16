@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/tests.css";
 import api from "../services/api";
@@ -32,35 +32,104 @@ const EmotionSvgs = {
 
 const Test = () => {
   const navigate = useNavigate();
+  
+  // États pour les questions
+  const [currentPhase, setCurrentPhase] = useState("PHASE1");
+  const [currentSection, setCurrentSection] = useState(null);
+  const [sectionIndex, setSectionIndex] = useState(0);
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [showConfirmPhase1, setShowConfirmPhase1] = useState(false);
+  const [showConfirmPhase2Complete, setShowConfirmPhase2Complete] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [error, setError] = useState(null);
+  const [sessionToken, setSessionToken] = useState(null);
+  const [assessmentId, setAssessmentId] = useState(null);
+  
+  // Progression
+  const [phase2SectionsCompleted, setPhase2SectionsCompleted] = useState({
+    OCCUPATIONS: false,
+    APTITUDES: false,
+    PERSONALITY: false
+  });
+  
+  // Pagination
+  const [isManualNavigation, setIsManualNavigation] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const autoAdvanceRef = useRef(null);
+  const questionsPerPage = 5;
 
-  // Récupérer les questions depuis l'API
-  const fetchQuestions = async () => {
+  const phase2Sections = [
+    { name: "OCCUPATIONS", label: "Occupations", icon: "💼", description: "Évaluez votre intérêt pour différentes professions", order: 0 },
+    { name: "APTITUDES", label: "Aptitudes", icon: "🧠", description: "Évaluez vos compétences et capacités", order: 1 },
+    { name: "PERSONALITY", label: "Personnalité", icon: "🌟", description: "Évaluez vos traits de personnalité", order: 2 }
+  ];
+
+  // Initialisation de la session
+  const initializeSession = async () => {
     try {
       const token = localStorage.getItem('token');
-      
-      console.log("🟡 Récupération des questions...");
+      if (!token) {
+        setError("Veuillez vous connecter pour passer le test");
+        return false;
+      }
+
+      let existingSessionToken = localStorage.getItem('session_token');
+      let existingAssessmentId = localStorage.getItem('assessment_id');
+
+      if (existingSessionToken && existingAssessmentId) {
+        setSessionToken(existingSessionToken);
+        setAssessmentId(existingAssessmentId);
+        return { sessionToken: existingSessionToken, assessmentId: existingAssessmentId };
+      }
+
+      const response = await api.post('/sessions', {
+        testVersionId: 1,
+        initialAssessmentType: "PHASE1",
+        depth: 5,
+        profile: {
+          startedAt: new Date().toISOString(),
+          mode: 'full'
+        }
+      });
+
+      console.log("Session créée:", response.data);
+
+      if (response.data.success && response.data.data) {
+        const newSessionToken = response.data.data.sessionToken;
+        const newAssessmentId = response.data.data.assessment.id;
+        
+        setSessionToken(newSessionToken);
+        setAssessmentId(newAssessmentId);
+        localStorage.setItem('session_token', newSessionToken);
+        localStorage.setItem('assessment_id', newAssessmentId);
+        
+        return { sessionToken: newSessionToken, assessmentId: newAssessmentId };
+      }
+      throw new Error("Erreur lors de l'initialisation");
+    } catch (err) {
+      console.error("Erreur initialisation:", err);
+      setError(err.response?.data?.message || "Impossible d'initialiser le test");
+      return false;
+    }
+  };
+
+  // Récupérer les questions Phase 1
+  const fetchPhase1Questions = async (token) => {
+    try {
+      console.log("Fetch Phase 1 avec token:", token);
       
       const response = await api.get('/questions/phase1', {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+        params: { 
+          sessionToken: token,
+          lang: 'fr' 
         }
       });
       
-      console.log("📦 Réponse API:", response.data);
+      console.log("Réponse Phase 1:", response.data);
       
-      if (response.data.success && response.data.data) {
-        const questionsData = response.data.data;
-        
-        // Transformer les données selon la structure reçue
-        const formattedQuestions = questionsData.map(q => ({
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        const formattedQuestions = response.data.data.map(q => ({
           id: q.id,
           text: q.text,
           riasecType: q.riasecType,
@@ -70,173 +139,352 @@ const Test = () => {
           maxValue: q.maxValue || 3,
           valueLabels: q.valueLabels || ["Non", "Pas trop", "Oui"],
           pointsValue: q.pointsValue || 1,
-          profiles: q.profiles || null,
-          sectionType: q.sectionType || null
+          phase: "PHASE1"
         }));
         
         setCurrentQuestions(formattedQuestions);
-        console.log(`✅ ${formattedQuestions.length} questions chargées`);
+        console.log(`✅ Phase 1: ${formattedQuestions.length} questions chargées`);
+        return true;
       } else {
-        throw new Error("Format de réponse invalide");
+        console.error("Aucune donnée dans la réponse:", response.data);
+        setError("Aucune question trouvée dans la base de données");
+        return false;
       }
     } catch (err) {
-      console.error("❌ Erreur chargement questions:", err);
-      setError(err.response?.data?.message || "Impossible de charger les questions");
+      console.error("Erreur chargement Phase 1:", err);
+      setError(err.response?.data?.message || "Impossible de charger les questions Phase 1");
+      return false;
     }
   };
 
+  // Récupérer les questions Phase 2 par section
+  const fetchPhase2Questions = async (section) => {
+    try {
+      console.log(`Fetch Phase 2 - ${section} avec token:`, sessionToken);
+      
+      const response = await api.get('/questions/phase2', {
+        params: {
+          sessionToken: sessionToken,
+          assessmentId: assessmentId,
+          section: section,
+          lang: 'fr',
+          take: 60
+        }
+      });
+      
+      console.log(`Réponse Phase 2 - ${section}:`, response.data);
+      
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        const formattedQuestions = response.data.data.map(q => ({
+          id: q.id,
+          text: q.text,
+          riasecType: q.riasecType,
+          sectionType: q.sectionType,
+          subtext: q.subtext || null,
+          minValue: q.minValue || 1,
+          maxValue: q.maxValue || 5,
+          valueLabels: q.valueLabels || ["Très faible", "Faible", "Moyen", "Fort", "Très fort"],
+          pointsValue: q.pointsValue || 1,
+          phase: "PHASE2",
+          section: section
+        }));
+        
+        setCurrentQuestions(formattedQuestions);
+        setCurrentSection(section);
+        console.log(`✅ Phase 2 - ${section}: ${formattedQuestions.length} questions chargées`);
+        return true;
+      } else {
+        console.error(`Aucune donnée pour la section ${section}:`, response.data);
+        return false;
+      }
+    } catch (err) {
+      console.error(`Erreur chargement Phase 2 - ${section}:`, err);
+      return false;
+    }
+  };
+
+  // Sauvegarder les réponses Phase 1
+  const savePhase1Responses = async (questionId, value, timeMs = 1000) => {
+    try {
+      await api.post('/responses/phase1', {
+        sessionToken,
+        assessmentId,
+        responses: [{
+          questionId,
+          responseValue: value,
+          timeTakenMs: timeMs,
+          changeCount: 0
+        }]
+      });
+    } catch (err) {
+      console.error("Erreur sauvegarde réponse Phase 1:", err);
+    }
+  };
+
+  // Sauvegarder les réponses Phase 2
+  const savePhase2Responses = async (questionId, value) => {
+    try {
+      await api.post('/responses/phase2', {
+        sessionToken,
+        assessmentId,
+        responses: [{
+          questionId,
+          responseValue: value
+        }]
+      });
+    } catch (err) {
+      console.error("Erreur sauvegarde réponse Phase 2:", err);
+    }
+  };
+
+  // Calculer les résultats Phase 1
+  const calculatePhase1Results = async () => {
+    try {
+      const response = await api.post('/results/calculate', {
+        sessionToken,
+        assessmentId,
+        force: true
+      });
+      console.log("✅ Résultats Phase 1 calculés:", response.data);
+      return true;
+    } catch (err) {
+      console.error("Erreur calcul résultats Phase 1:", err);
+      return false;
+    }
+  };
+
+  // Calculer les résultats finaux
+  const calculateFinalResults = async () => {
+    try {
+      const response = await api.post('/results/calculate', {
+        sessionToken,
+        assessmentId,
+        force: true,
+        subjectiveRanking: {}
+      });
+      console.log("✅ Résultats finaux calculés:", response.data);
+      return true;
+    } catch (err) {
+      console.error("Erreur calcul résultats finaux:", err);
+      return false;
+    }
+  };
+
+  // Finaliser le test et aller aux résultats
+  const finalizeTest = async () => {
+    setLoading(true);
+    await calculateFinalResults();
+    navigate("/orientations", { state: { assessmentId, sessionToken } });
+    setLoading(false);
+  };
+
+  // Passer à la Phase 2
+  const goToPhase2 = async () => {
+    setCurrentPhase("PHASE2");
+    setCurrentPage(0);
+    setAnswers({});
+    setSectionIndex(0);
+    await fetchPhase2Questions(phase2Sections[0].name);
+  };
+
+  // Passer à la section suivante de Phase 2
+  const goToNextSection = async () => {
+    // Marquer la section actuelle comme complétée
+    setPhase2SectionsCompleted(prev => ({
+      ...prev,
+      [currentSection]: true
+    }));
+    
+    const currentIdx = phase2Sections.findIndex(s => s.name === currentSection);
+    
+    if (currentIdx + 1 < phase2Sections.length) {
+      // Passer à la section suivante
+      const nextSection = phase2Sections[currentIdx + 1].name;
+      setSectionIndex(currentIdx + 1);
+      setCurrentPage(0);
+      setAnswers({});
+      await fetchPhase2Questions(nextSection);
+    } else {
+      // Toutes les sections sont terminées, montrer la confirmation
+      setShowConfirmPhase2Complete(true);
+    }
+  };
+
+  // Chargement initial
   useEffect(() => {
-    const loadQuestions = async () => {
+    const loadTest = async () => {
       setLoading(true);
-      await fetchQuestions();
+      setError(null);
+      
+      const sessionData = await initializeSession();
+      
+      if (sessionData && sessionData.sessionToken) {
+        await fetchPhase1Questions(sessionData.sessionToken);
+      }
+      
       setLoading(false);
     };
     
-    loadQuestions();
+    loadTest();
   }, []);
 
-  const handleAnswer = (questionId, value, question) => {
-    // Calculer le score normalisé (0-1)
-    let normalizedScore;
-    if (question.minValue && question.maxValue) {
-      normalizedScore = (value - question.minValue) / (question.maxValue - question.minValue);
+  // Pagination
+  const totalPages = Math.ceil(currentQuestions.length / questionsPerPage);
+  const paginatedQuestions = currentQuestions.slice(currentPage * questionsPerPage, (currentPage + 1) * questionsPerPage);
+  const total = currentQuestions.length;
+  const answered = Object.keys(answers).length;
+  const progress = total > 0 ? (answered / total) * 100 : 0;
+
+  // Calculer la progression globale
+  const getGlobalProgress = () => {
+    if (currentPhase === "PHASE1") {
+      return {
+        phase: "Phase 1 - Intérêts",
+        percentage: progress,
+        description: "Évaluation de vos intérêts professionnels"
+      };
     } else {
-      normalizedScore = value / 3;
+      const totalSections = phase2Sections.length;
+      let completedCount = 0;
+      phase2Sections.forEach(section => {
+        if (phase2SectionsCompleted[section.name]) completedCount++;
+      });
+      
+      let globalProgress = (completedCount * 100) / totalSections;
+      if (currentSection) {
+        globalProgress += (progress / totalSections);
+      }
+      
+      const currentSectionData = phase2Sections.find(s => s.name === currentSection);
+      
+      return {
+        phase: `Phase 2 - ${currentSectionData?.label || currentSection}`,
+        percentage: Math.min(globalProgress, 100),
+        description: currentSectionData?.description || "Évaluation approfondie"
+      };
     }
+  };
+
+  const isPageComplete = (pageIndex) => {
+    const start = pageIndex * questionsPerPage;
+    const end = Math.min(start + questionsPerPage, currentQuestions.length);
+    const pageQuestions = currentQuestions.slice(start, end);
+    return pageQuestions.every((q) => answers[q.id]);
+  };
+
+  const isCurrentPageComplete = () => paginatedQuestions.every((q) => answers[q.id]);
+
+  // Défilement automatique
+  useEffect(() => {
+    if (isManualNavigation) return;
     
-    // Gérer les poids si présents (pour les questions avec plusieurs profils)
-    let answerData = {
-      value: value,
-      score: normalizedScore,
-      riasecType: question.riasecType,
-      pointsValue: question.pointsValue || 1
+    if (isCurrentPageComplete() && currentPage < totalPages - 1 && totalPages > 0) {
+      if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+      autoAdvanceRef.current = setTimeout(() => {
+        setCurrentPage((prev) => prev + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 800);
+    }
+    return () => {
+      if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
     };
-    
-    // Si la question a des profiles (plusieurs types RIASEC avec poids)
-    if (question.profiles && question.profiles.length > 0) {
-      answerData.profiles = question.profiles;
-    }
+  }, [answers, currentPage, totalPages, isManualNavigation, isCurrentPageComplete]);
+
+  const handleAnswer = async (questionId, value, question) => {
+    const answerData = {
+      value: value,
+      riasecType: question.riasecType,
+    };
     
     const newAnswers = { ...answers, [questionId]: answerData };
     setAnswers(newAnswers);
     
-    if (currentIndex + 1 < currentQuestions.length) {
-      setCurrentIndex(currentIndex + 1);
+    if (currentPhase === "PHASE1") {
+      await savePhase1Responses(questionId, value);
     } else {
-      setShowConfirm(true);
+      await savePhase2Responses(questionId, value);
     }
   };
 
-  const calculateResults = () => {
-    const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-    const counts = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const handleNextPage = () => {
+    if (!isCurrentPageComplete()) {
+      const remaining = paginatedQuestions.filter(q => !answers[q.id]).length;
+      alert(`Veuillez répondre à toutes les questions (${remaining} restantes sur cette page)`);
+      return;
+    }
     
-    Object.values(answers).forEach((answer) => {
-      // Si la question a des profiles multiples
-      if (answer.profiles && answer.profiles.length > 0) {
-        answer.profiles.forEach(profile => {
-          const type = profile.riasecType;
-          const weight = profile.weight || 1;
-          if (scores[type] !== undefined) {
-            scores[type] += answer.score * weight;
-            counts[type] += weight;
-          }
-        });
-      } 
-      // Sinon, utiliser le riasecType simple
-      else if (answer.riasecType) {
-        const type = answer.riasecType;
-        const weight = answer.pointsValue || 1;
-        if (scores[type] !== undefined) {
-          scores[type] += answer.score * weight;
-          counts[type] += weight;
-        }
-      }
-    });
-    
-    // Calculer les pourcentages
-    Object.keys(scores).forEach((type) => {
-      if (counts[type] > 0) {
-        scores[type] = Math.round((scores[type] / counts[type]) * 100);
+    setIsManualNavigation(true);
+    if (currentPage + 1 < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => setIsManualNavigation(false), 2000);
+    } else {
+      // Dernière page de la section/phase
+      if (currentPhase === "PHASE1") {
+        // Fin de la Phase 1
+        setShowConfirmPhase1(true);
       } else {
-        scores[type] = 0;
-      }
-    });
-    
-    // Trier pour obtenir le code RIASEC
-    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    const code = sorted.slice(0, 3).map(([t]) => t).join("");
-    
-    return { riasec: scores, code };
-  };
-
-  const handleSubmit = async () => {
-    const results = calculateResults();
-    localStorage.setItem("riasec_results", JSON.stringify(results));
-    
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        setSaving(true);
-        await api.post('/orientation/save', {
-          results: results,
-          answers: answers,
-          completedAt: new Date().toISOString()
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        console.log('✅ Résultats sauvegardés');
-      } catch (error) {
-        console.error('❌ Erreur sauvegarde:', error);
-      } finally {
-        setSaving(false);
+        // Fin de la section Phase 2 actuelle
+        goToNextSection();
       }
     }
-    
-    navigate("/orientations", { state: { results } });
   };
 
-  const currentQuestion = currentQuestions[currentIndex];
-  const progress = currentQuestions.length > 0 ? ((currentIndex + 1) / currentQuestions.length) * 100 : 0;
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setIsManualNavigation(true);
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => setIsManualNavigation(false), 2000);
+    }
+  };
 
-  // Rendu des options selon le type de question
+  const handleDotClick = (idx) => {
+    if (isPageComplete(idx) || idx < currentPage) {
+      setIsManualNavigation(true);
+      setCurrentPage(idx);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => setIsManualNavigation(false), 2000);
+    } else {
+      alert("Veuillez répondre à toutes les questions de cette page avant de continuer");
+    }
+  };
+
+  const handlePhase1Complete = async () => {
+    setShowConfirmPhase1(false);
+    setLoading(true);
+    await calculatePhase1Results();
+    await goToPhase2();
+    setLoading(false);
+  };
+
+  const handlePhase2Complete = async () => {
+    setShowConfirmPhase2Complete(false);
+    await finalizeTest();
+  };
+
+  // Rendu des options
   const renderOptions = (question) => {
-    if (!question) return null;
-    
-    // Cas des questions avec valueLabels personnalisés (échelle 1-5 par exemple)
-    if (question.valueLabels && question.valueLabels.length > 0) {
-      const totalSteps = question.valueLabels.length;
-      const step = (question.maxValue - question.minValue) / (totalSteps - 1);
-      
+    if (question.phase === "PHASE2") {
+      const options = [1, 2, 3, 4, 5];
       return (
-        <div className="slider-options">
-          {question.valueLabels.map((label, idx) => {
-            const value = question.minValue + (idx * step);
-            let emoji = EmotionSvgs.neutral;
-            
-            // Assigner l'émotion selon la position
-            if (idx === 0) emoji = EmotionSvgs.sad;
-            if (idx === totalSteps - 1) emoji = EmotionSvgs.happy;
-            
-            return (
-              <button
-                key={idx}
-                className={`emotion-btn ${answers[question.id]?.value === value ? "active" : ""}`}
-                onClick={() => handleAnswer(question.id, value, question)}
-              >
-                <div className="emotion-svg">{emoji}</div>
-                <span className="emotion-label">{label}</span>
-                {answers[question.id]?.value === value && (
-                  <span className="check-mark">✓</span>
-                )}
-              </button>
-            );
-          })}
+        <div className="slider-options scale-options">
+          {options.map((val) => (
+            <button
+              key={val}
+              className={`scale-btn ${answers[question.id]?.value === val ? "active" : ""}`}
+              onClick={() => handleAnswer(question.id, val, question)}
+            >
+              <span className="scale-value">{val}</span>
+              {question.valueLabels && question.valueLabels[val - 1] && (
+                <span className="scale-label">{question.valueLabels[val - 1]}</span>
+              )}
+            </button>
+          ))}
         </div>
       );
     }
     
-    // Format par défaut (Non, Pas trop, Oui)
     const options = [
       { value: 1, label: "Non", emoji: EmotionSvgs.sad },
       { value: 2, label: "Pas trop", emoji: EmotionSvgs.neutral },
@@ -262,12 +510,19 @@ const Test = () => {
     );
   };
 
+  const globalProgress = getGlobalProgress();
+
   if (loading) {
     return (
       <div className="test-page">
         <div className="test-container">
           <div className="loader" style={{ textAlign: 'center', padding: '50px' }}>
-            Chargement des questions...
+            <div className="spinner"></div>
+            <p style={{ marginTop: '20px' }}>
+              {currentPhase === "PHASE1" 
+                ? "Chargement des questions Phase 1..." 
+                : `Chargement de la section ${currentSection}...`}
+            </p>
           </div>
         </div>
       </div>
@@ -280,15 +535,12 @@ const Test = () => {
         <div className="test-container">
           <div className="error-container" style={{ textAlign: 'center', padding: '50px' }}>
             <div className="error-message" style={{ color: 'red', marginBottom: '20px' }}>
-              {error}
+              <strong>Erreur :</strong> {error}
             </div>
             <button 
-              onClick={() => {
-                setCurrentIndex(0);
-                setAnswers({});
-                window.location.reload();
-              }} 
+              onClick={() => window.location.reload()} 
               style={{
+                marginTop: '20px',
                 padding: '10px 20px',
                 backgroundColor: '#6246E5',
                 color: 'white',
@@ -305,6 +557,19 @@ const Test = () => {
     );
   }
 
+  if (currentQuestions.length === 0) {
+    return (
+      <div className="test-page">
+        <div className="test-container">
+          <div className="error-container" style={{ textAlign: 'center', padding: '50px' }}>
+            <p>Aucune question disponible</p>
+            <button onClick={() => window.location.reload()} className="submit-btn">Recharger</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="test-page">
       <div className="test-container">
@@ -314,48 +579,128 @@ const Test = () => {
             <span className="logo-text">RIASEC Profiler</span>
           </div>
           <div className="progress-section">
+            <div className="phase-indicator">
+              <span className="phase-name">{globalProgress.phase}</span>
+              <span className="phase-desc">{globalProgress.description}</span>
+            </div>
             <div className="progress-stats">
-              <span>Question {currentIndex + 1}/{currentQuestions.length}</span>
-              <span>{Math.round(progress)}%</span>
+              <span>{answered}/{total} questions</span>
+              <span>{Math.round(globalProgress.percentage)}%</span>
             </div>
             <div className="progress-bar-container">
-              <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+              <div className="progress-bar-fill" style={{ width: `${globalProgress.percentage}%` }} />
             </div>
           </div>
         </div>
 
-        {currentQuestion && (
-          <div className="questions-grid">
-            <div className={`question-card ${answers[currentQuestion.id] ? "answered" : ""}`}>
-              <h3 className="question-text">{currentQuestion.text}</h3>
-              {currentQuestion.subtext && (
-                <p className="question-subtext" style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '-0.5rem', marginBottom: '1rem' }}>
-                  {currentQuestion.subtext}
-                </p>
-              )}
-              {currentQuestion.short && !currentQuestion.subtext && (
-                <p className="question-short" style={{ color: '#6246E5', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                  {currentQuestion.short}
-                </p>
+        {/* Indicateur de section pour Phase 2 */}
+        {currentPhase === "PHASE2" && (
+          <div className="phase2-sections-indicator">
+            {phase2Sections.map((section) => (
+              <div 
+                key={section.name}
+                className={`section-badge ${section.name === currentSection ? "active" : ""} ${phase2SectionsCompleted[section.name] ? "completed" : ""}`}
+              >
+                <span className="section-icon">{section.icon}</span>
+                <span className="section-name">{section.label}</span>
+                {phase2SectionsCompleted[section.name] && <span className="section-check">✓</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="page-indicator-header">
+          <span>Page {currentPage + 1} / {totalPages}</span>
+          {isCurrentPageComplete() && (
+            <span className="page-complete-badge">✓ Page complète !</span>
+          )}
+        </div>
+
+        <div className="questions-grid">
+          {paginatedQuestions.map((question) => (
+            <div key={question.id} className={`question-card ${answers[question.id] ? "answered" : ""}`}>
+              <h3 className="question-text">{question.text}</h3>
+              {question.subtext && (
+                <p className="question-subtext">{question.subtext}</p>
               )}
               <div className="emotion-slider">
-                {renderOptions(currentQuestion)}
+                {renderOptions(question)}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pagination-nav">
+          <button
+            className="page-nav-btn prev-btn"
+            onClick={handlePrevPage}
+            disabled={currentPage === 0}
+          >
+            ← Page précédente
+          </button>
+
+          <div className="page-indicator">
+            {Array.from({ length: Math.min(totalPages, 8) }).map((_, idx) => (
+              <div
+                key={idx}
+                className={`page-dot ${currentPage === idx ? "active" : ""} ${isPageComplete(idx) ? "complete" : ""}`}
+                onClick={() => handleDotClick(idx)}
+              />
+            ))}
+            {totalPages > 8 && <span className="page-dots">...</span>}
+          </div>
+
+          <button className="page-nav-btn next-btn" onClick={handleNextPage}>
+            {currentPage + 1 === totalPages 
+              ? (currentPhase === "PHASE1" 
+                  ? "Terminer Phase 1 →" 
+                  : "Terminer cette section →")
+              : "Page suivante →"}
+          </button>
+        </div>
+
+        {/* Modal fin Phase 1 */}
+        {showConfirmPhase1 && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-icon">🎉</div>
+              <h3>Phase 1 terminée !</h3>
+              <p>Vous avez répondu à toutes les questions de la Phase 1.</p>
+              <div className="phase2-preview">
+                <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
+                  La Phase 2 contient 3 sections :
+                </p>
+                <ul style={{ textAlign: 'left', marginTop: '10px' }}>
+                  <li>💼 Occupations (intérêt pour les métiers)</li>
+                  <li>🧠 Aptitudes (vos compétences)</li>
+                  <li>🌟 Personnalité (vos traits)</li>
+                </ul>
+              </div>
+              <div className="modal-buttons">
+                <button onClick={() => setShowConfirmPhase1(false)} className="modal-cancel">
+                  Annuler
+                </button>
+                <button onClick={handlePhase1Complete} className="modal-confirm">
+                  Passer à la Phase 2 →
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {showConfirm && (
+        {/* Modal fin Phase 2 */}
+        {showConfirmPhase2Complete && (
           <div className="modal-overlay">
             <div className="modal-content">
-              <div className="modal-icon">🎉</div>
-              <h3>Terminer le test ?</h3>
-              <p>Vous avez répondu à toutes les questions</p>
-              {saving && <p>Sauvegarde en cours...</p>}
+              <div className="modal-icon">🏆</div>
+              <h3>Félicitations !</h3>
+              <p>Vous avez terminé toutes les phases du test.</p>
+              <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
+                Vos résultats vont maintenant être analysés.
+              </p>
               <div className="modal-buttons">
-                <button onClick={() => setShowConfirm(false)} className="modal-cancel">Continuer</button>
-                <button onClick={handleSubmit} className="modal-confirm" disabled={saving}>
-                  {saving ? "Sauvegarde..." : "Voir mes résultats"}
+                <button onClick={handlePhase2Complete} className="modal-confirm">
+                  Voir mes résultats →
                 </button>
               </div>
             </div>
