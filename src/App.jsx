@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/authContext';
 
-// Pages
 import Home from './pages/home';
 import LoginPage from './pages/login';
 import RegisterPage from './pages/register';
@@ -16,7 +15,6 @@ import HeaderParent from './components/headerParent';
 import Footer from './components/footer';
 import ScrollToTop from './components/ScrollToTop';
 
-// Composant pour les routes protégées
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, token } = useAuth();
   const isAuth = isAuthenticated || token;
@@ -36,12 +34,10 @@ function App() {
 
         <HeaderParent />
         <Routes>
-          {/* SEULE L'ACCUEIL EST PUBLIQUE */}
           <Route path="/" element={<Navigate to="/accueil" replace />} />
           <Route path="/accueil" element={<Home />} />
 
                     
-          {/* TOUTES LES AUTRES ROUTES SONT PROTÉGÉES */}
           <Route path="/universites-formations" element={
             <ProtectedRoute>
               <UniversitiesPage />
@@ -78,7 +74,6 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Routes d'authentification */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Routes>
