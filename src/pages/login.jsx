@@ -29,7 +29,7 @@ const LoginPage = () => {
       console.log("Réponse complète:", response.data);
       
       // Extraction des données selon ton format
-      const { accessToken, refreshToken, data: userData } = response.data.data;
+      const { accessToken, refreshToken, data: userData } = response.data;
       
       // Format de l'utilisateur pour ton contexte
       const user = {

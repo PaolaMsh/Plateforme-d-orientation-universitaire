@@ -32,10 +32,10 @@ const Testsorientations = () => {
         const response = await api.get('/tests/stats', { headers });
         
         // Adapter selon la structure de la réponse
-        if (response.data.success && response.data.data) {
+        if (response.data) {
           setStats({
-            totalTests: response.data.data.totalTests || response.data.data.total || 12543,
-            avgTime: response.data.data.avgTime || response.data.data.averageTime || 12
+            totalTests: response.data.totalTests || response.data.total || 12543,
+            avgTime: response.data.avgTime || response.data.averageTime || 12
           });
         } else if (response.data.totalTests) {
           setStats({
@@ -62,7 +62,6 @@ const Testsorientations = () => {
     <div className="to-page">
       <div className="to-hero">
         <div className="to-hero-inner">
-          <div className="to-hero-badge">Test d'orientation RIASEC</div>
           <h1 className="to-hero-title">
             Découvre la filière<br />
             <span className="to-hero-accent">qui te correspond</span>

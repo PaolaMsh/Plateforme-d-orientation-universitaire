@@ -1,617 +1,787 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import '../styles/orientations.css';
-import api from '../services/api';
+import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
+import "../styles/orientations.css";
 
-const Orientations = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('radar');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Données provenant UNIQUEMENT de l'API
-  const [resultData, setResultData] = useState(null);
-  const [assessmentData, setAssessmentData] = useState(null);
-  const [progressData, setProgressData] = useState(null);
-  const [careers, setCareers] = useState([]);
-  const [trainingCenters, setTrainingCenters] = useState([]);
-  const [trainingPaths, setTrainingPaths] = useState([]);
+const IconDoc = () => (
+  <svg
+    width="20"
+    height="20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
 
-  const types = [
-    { type: 'R', name: 'Réaliste', icon: '🛠️', color: '#EF4444', bgColor: '#FEF2F2', desc: 'Pratique, aime travailler avec des outils', details: 'Métiers manuels, techniques, concrets. Aime les activités physiques et les résultats tangibles.' },
-    { type: 'I', name: 'Investigateur', icon: '🔬', color: '#3B82F6', bgColor: '#EFF6FF', desc: 'Curieux, aime résoudre des problèmes', details: 'Métiers scientifiques, analytiques, de recherche. Aime observer, apprendre et résoudre des problèmes complexes.' },
-    { type: 'A', name: 'Artistique', icon: '🎨', color: '#8B5CF6', bgColor: '#F5F3FF', desc: 'Créatif, aime s\'exprimer', details: 'Métiers créatifs, artistiques, d\'expression. Aime l\'innovation, l\'originalité et la liberté d\'expression.' },
-    { type: 'S', name: 'Social', icon: '🤝', color: '#10B981', bgColor: '#ECFDF5', desc: 'Aime aider les autres', details: 'Métiers relationnels, éducatifs, de soin. Aime collaborer, enseigner et aider les autres à se développer.' },
-    { type: 'E', name: 'Entreprenant', icon: '🚀', color: '#F59E0B', bgColor: '#FFFBEB', desc: 'Leader, prend des initiatives', details: 'Métiers commerciaux, managériaux, de leadership. Aime convaincre, diriger et atteindre des objectifs.' },
-    { type: 'C', name: 'Conventionnel', icon: '📊', color: '#6366F1', bgColor: '#EEF2FF', desc: 'Organisé, méthodique', details: 'Métiers administratifs, de gestion, de données. Aime l\'ordre, la précision et les tâches structurées.' }
+const IconInfo = () => (
+  <svg
+    width="20"
+    height="20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12.01" y2="8" />
+  </svg>
+);
+
+const IconBar = () => (
+  <svg
+    width="20"
+    height="20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+  </svg>
+);
+
+const IconSearch = ({ size = 20 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const IconWrench = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+  </svg>
+);
+
+const IconUsers = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+    <path d="M16 3.13a4 4 0 010 7.75" />
+  </svg>
+);
+
+const IconPhone = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.22 2 2 0 012.1 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.18 6.18l1.27-.45a2 2 0 012.11.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+  </svg>
+);
+
+const IconCalendar = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const IconClipboard = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <rect x="9" y="2" width="6" height="4" rx="1" />
+    <path d="M9 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2h-2" />
+    <line x1="9" y1="12" x2="15" y2="12" />
+    <line x1="9" y1="16" x2="13" y2="16" />
+  </svg>
+);
+
+const IconHome = ({ size = 20 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
+const IconGrid = ({ size = 18 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+
+const IconTrend = ({ size = 13 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+    <polyline points="17 6 23 6 23 12" />
+  </svg>
+);
+
+const IconBarChart = ({ size = 20 }) => (
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="white"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
+    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+// Données mockées pour les scores
+const MOCK_SCORES = {
+  REALISTIC: 78,
+  INVESTIGATIVE: 92,
+  ARTISTIC: 35,
+  SOCIAL: 40,
+  ENTERPRISING: 70,
+  CONVENTIONAL: 45,
+};
+
+// Données mockées pour les recommandations
+const MOCK_RECOMMENDATIONS = {
+  INVESTIGATIVE: {
+    formations: [
+      "Master Data Science & IA",
+      "Doctorat en Physique/Chimie",
+      "Ingénierie Recherche & Développement",
+      "Master Biotechnologies",
+    ],
+    metiers: [
+      "Data Scientist",
+      "Chercheur en laboratoire",
+      "Ingénieur R&D",
+      "Analyste cybersécurité",
+      "Bio-informaticien",
+    ],
+    ecoles: [
+      "Ecole Polytechnique (X)",
+      "CentraleSupelec",
+      "INRIA - Institut national de recherche",
+      "Université Paris-Saclay (Master IA)",
+      "EPFL Lausanne - Doctorat sciences exactes",
+    ],
+  },
+  REALISTIC: {
+    formations: [
+      "BTS Maintenance industrielle",
+      "Licence Pro Génie Civil",
+      "DUT Génie Mécanique",
+    ],
+    metiers: [
+      "Ingénieur Procédés",
+      "Technicien de maintenance",
+      "Conducteur de travaux",
+    ],
+    ecoles: [],
+  },
+};
+
+/* ─── RADAR CHART ─── */
+function RadarChart({ scores }) {
+  const cx = 200,
+    cy = 175,
+    maxR = 130;
+  const axes = [
+    { label: "Realiste (R)", angle: -90, value: scores?.REALISTIC || 0 },
+    {
+      label: "Investigateur (I)",
+      angle: -30,
+      value: scores?.INVESTIGATIVE || 0,
+    },
+    { label: "Artistique (A)", angle: 30, value: scores?.ARTISTIC || 0 },
+    { label: "Social (S)", angle: 90, value: scores?.SOCIAL || 0 },
+    { label: "Entreprenant (E)", angle: 150, value: scores?.ENTERPRISING || 0 },
+    {
+      label: "Conventionnel (C)",
+      angle: 210,
+      value: scores?.CONVENTIONAL || 0,
+    },
   ];
 
-  // Appels API (identiques à avant)
-  const fetchResults = async (assessmentId) => {
-    try {
-      const response = await api.get(`/results/assessment/${assessmentId}`);
-      if (response.data.success && response.data.data) {
-        setResultData(response.data.data);
-        return response.data.data;
-      }
-    } catch (err) {
-      console.error("Erreur récupération résultats:", err);
-    }
-  };
+  const toRad = (d) => (d * Math.PI) / 180;
+  const polar = (angle, r) => ({
+    x: cx + r * Math.cos(toRad(angle)),
+    y: cy + r * Math.sin(toRad(angle)),
+  });
+  const pts = (arr) => arr.map((p) => `${p.x},${p.y}`).join(" ");
 
-  const fetchAssessment = async (assessmentId, sessionToken) => {
-    try {
-      const response = await api.get(`/assessments/${assessmentId}`, {
-        params: { sessionToken }
-      });
-      if (response.data.success && response.data.data) {
-        setAssessmentData(response.data.data);
-        return response.data.data;
-      }
-    } catch (err) {
-      console.error("Erreur récupération assessment:", err);
-    }
-  };
+  const levels = [20, 40, 60, 80, 100];
 
-  const fetchProgress = async (assessmentId, sessionToken) => {
-    try {
-      const response = await api.get(`/assessments/${assessmentId}/progress`, {
-        params: { sessionToken }
-      });
-      if (response.data.success && response.data.data) {
-        setProgressData(response.data.data);
-        return response.data.data;
-      }
-    } catch (err) {
-      console.error("Erreur récupération progression:", err);
-    }
-  };
-
-  const fetchCareers = async () => {
-    try {
-      const response = await api.get('/careers', {
-        params: { activeOnly: true, limit: 50 }
-      });
-      if (response.data.success && response.data.data) {
-        setCareers(response.data.data);
-        return response.data.data;
-      }
-    } catch (err) {
-      console.error("Erreur récupération carrières:", err);
-    }
-  };
-
-  const fetchTrainingCenters = async () => {
-    try {
-      const response = await api.get('/training-centers', {
-        params: { activeOnly: true, limit: 20 }
-      });
-      if (response.data.success && response.data.data) {
-        setTrainingCenters(response.data.data);
-        return response.data.data;
-      }
-    } catch (err) {
-      console.error("Erreur récupération centres formation:", err);
-    }
-  };
-
-  const fetchTrainingPaths = async () => {
-    try {
-      const response = await api.get('/training-paths', {
-        params: { activeOnly: true, limit: 20 }
-      });
-      if (response.data.success && response.data.data) {
-        setTrainingPaths(response.data.data);
-        return response.data.data;
-      }
-    } catch (err) {
-      console.error("Erreur récupération parcours formation:", err);
-    }
-  };
-
-  useEffect(() => {
-    const loadAllData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      const sessionToken = location.state?.sessionToken || localStorage.getItem('session_token');
-      const assessmentId = location.state?.assessmentId || localStorage.getItem('assessment_id');
-      
-      if (!sessionToken || !assessmentId) {
-        setError("Session introuvable. Veuillez recommencer le test.");
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        await Promise.all([
-          fetchResults(assessmentId),
-          fetchAssessment(assessmentId, sessionToken),
-          fetchProgress(assessmentId, sessionToken),
-          fetchCareers(),
-          fetchTrainingCenters(),
-          fetchTrainingPaths()
-        ]);
-      } catch (err) {
-        setError("Impossible de charger vos résultats.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadAllData();
-  }, [location]);
-
-  const getScores = () => {
-    const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-    
-    if (resultData?.riasecProfile?.scores) {
-      const apiScores = resultData.riasecProfile.scores;
-      Object.keys(scores).forEach(key => {
-        scores[key] = apiScores[key] ? Math.round(apiScores[key] * 100) : 0;
-      });
-    } else if (resultData?.phase2_code) {
-      const code = resultData.phase2_code;
-      if (code[0]) scores[code[0]] = 90;
-      if (code[1]) scores[code[1]] = 70;
-      if (code[2]) scores[code[2]] = 50;
-    } else if (resultData?.phase1_code) {
-      const code = resultData.phase1_code;
-      if (code[0]) scores[code[0]] = 90;
-      if (code[1]) scores[code[1]] = 70;
-      if (code[2]) scores[code[2]] = 50;
-    }
-    
-    return scores;
-  };
-
-  const getCode = () => {
-    return resultData?.phase2_code || resultData?.phase1_code || '---';
-  };
-
-  const getRecommendedCareers = () => {
-    const code = getCode();
-    if (!code || code === '---') return [];
-    
-    const recommended = careers.filter(career => {
-      if (!career.riasec_codes) return false;
-      return career.riasec_codes.some(riasecCode => code.includes(riasecCode));
-    });
-    
-    return recommended.slice(0, 12);
-  };
-
-  const getRecommendedTrainings = () => {
-    const recommendedCareers = getRecommendedCareers();
-    const careerIds = recommendedCareers.map(c => c.id);
-    
-    const recommended = trainingPaths.filter(path => 
-      careerIds.includes(path.career_id)
-    );
-    
-    return recommended.slice(0, 6);
-  };
-
-  const riasec = getScores();
-  const code = getCode();
-
-  const sortedTypes = [...types].sort((a, b) => (riasec[b.type] || 0) - (riasec[a.type] || 0));
-  const dominantTypes = sortedTypes.slice(0, 3);
-  const topType = dominantTypes[0];
-  const secondType = dominantTypes[1];
-  const thirdType = dominantTypes[2];
-  
-  const completionPercentage = progressData?.completionPercentage || assessmentData?.completion_percentage || 0;
-  const status = assessmentData?.status || progressData?.status || 'IN_PROGRESS';
-  
-  const getInterpretation = () => {
-    if (!code || code === '---') return '';
-    const firstCode = code[0];
-    const interpretations = {
-      'R': 'Vous êtes un "faiseur pragmatique" : vous aimez passer à l\'action et obtenir des résultats tangibles. Vous excellez dans les environnements concrets et pratiques.',
-      'I': 'Vous êtes un "penseur-acteur" : vous avez une grande capacité à conceptualiser puis à concrétiser vos idées. La recherche et l\'analyse vous stimulent.',
-      'A': 'Vous êtes un "créatif expressif" : vous avez besoin d\'espace pour innover et vous exprimer. L\'originalité est votre moteur.',
-      'S': 'Vous êtes un "aidant relationnel" : votre épanouissement passe par l\'aide aux autres et les interactions humaines.',
-      'E': 'Vous êtes un "leader stratège" : vous aimez convaincre, diriger et atteindre des objectifs ambitieux.',
-      'C': 'Vous êtes un "organisateur méthodique" : vous excellez dans les tâches structurées et l\'analyse de données.'
-    };
-    return interpretations[firstCode] || 'Profil équilibré avec des intérêts variés.';
-  };
-
-  const getProfilDescription = () => {
-    if (!code || code === '---') return '';
-    
-    const descriptions = {
-      'R': 'Votre profil Réaliste montre une préférence pour les activités concrètes, manuelles et techniques. Vous aimez travailler avec vos mains, utiliser des outils et obtenir des résultats tangibles.',
-      'I': 'Votre profil Investigateur révèle une forte curiosité intellectuelle. Vous aimez analyser, comprendre et résoudre des problèmes complexes par l\'observation et l\'expérimentation.',
-      'A': 'Votre profil Artistique indique une sensibilité créative prononcée. Vous recherchez l\'originalité, l\'expression personnelle et l\'innovation dans ce que vous faites.',
-      'S': 'Votre profil Social démontre un grand intérêt pour les relations humaines. Vous aimez aider, enseigner, conseiller et collaborer avec les autres.',
-      'E': 'Votre profil Entreprenant montre un fort potentiel de leadership. Vous aimez convaincre, diriger, prendre des risques calculés et atteindre des objectifs.',
-      'C': 'Votre profil Conventionnel révèle une préférence pour l\'organisation et la précision. Vous aimez les tâches structurées, la gestion de données et le travail méthodique.'
-    };
-    
-    const firstCode = code[0];
-    let description = descriptions[firstCode] || '';
-    
-    if (code.length >= 2) {
-      const secondCode = code[1];
-      const combinations = {
-        'RI': ' La combinaison Réaliste-Investigateur est idéale pour les métiers d\'ingénierie et de recherche appliquée.',
-        'IR': ' La combinaison Investigateur-Réaliste est parfaite pour la R&D et les sciences appliquées.',
-        'AS': ' La combinaison Artistique-Social est excellente pour les métiers créatifs liés à l\'humain (design pédagogique, art-thérapie).',
-        'SE': ' La combinaison Social-Entreprenant est idéale pour le management, les RH et le conseil.',
-        'EC': ' La combinaison Entreprenant-Conventionnel est parfaite pour la gestion d\'entreprise et l\'administration.',
-        'CR': ' La combinaison Conventionnel-Réaliste est excellente pour les métiers techniques organisés (qualité, logistique).'
-      };
-      description += combinations[firstCode + secondCode] || combinations[secondCode + firstCode] || '';
-    }
-    
-    return description;
-  };
-
-  const recommendedCareers = getRecommendedCareers();
-  const recommendedTrainings = getRecommendedTrainings();
-
-  const getHexagonPoints = () => {
-    const centerX = 120;
-    const centerY = 120;
-    const radius = 100;
-    const angles = [90, 30, 330, 270, 210, 150];
-    return angles.map(angle => {
-      const radian = (angle * Math.PI) / 180;
-      return {
-        x: centerX + radius * Math.cos(radian),
-        y: centerY - radius * Math.sin(radian)
-      };
-    });
-  };
-
-  const getDataPoints = () => {
-    const centerX = 120;
-    const centerY = 120;
-    const maxRadius = 100;
-    const angles = [90, 30, 330, 270, 210, 150];
-    const order = ['R', 'I', 'A', 'S', 'E', 'C'];
-    
-    return angles.map((angle, idx) => {
-      const score = Math.min((riasec[order[idx]] || 0) / 100, 1);
-      const radius = maxRadius * score;
-      const radian = (angle * Math.PI) / 180;
-      return {
-        x: centerX + radius * Math.cos(radian),
-        y: centerY - radius * Math.sin(radian)
-      };
-    });
-  };
-
-  const hexagonPoints = getHexagonPoints();
-  const dataPoints = getDataPoints();
-  const dataPointsString = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
-
-  if (loading) {
+  const gridPolygons = levels.map((lvl) => {
+    const points = pts(axes.map((a) => polar(a.angle, (lvl / 100) * maxR)));
     return (
-      <div className="orientations-container">
-        <div className="loader" style={{ textAlign: 'center', padding: '50px' }}>
-          <div className="spinner"></div>
-          <p>Analyse de votre profil RIASEC...</p>
-        </div>
-      </div>
+      <polygon
+        key={lvl}
+        points={points}
+        fill="none"
+        stroke="#e5e7eb"
+        strokeWidth="1"
+      />
     );
-  }
+  });
 
-  if (error) {
+  const scaleLabels = levels.map((lvl) => {
+    const p = polar(-90, (lvl / 100) * maxR);
     return (
-      <div className="orientations-container">
-        <div className="error" style={{ textAlign: 'center', padding: '50px' }}>
-          <p style={{ color: 'red' }}>{error}</p>
-          <button onClick={() => navigate('/tests')} className="btn-primary">
-            Retour au test
-          </button>
-        </div>
-      </div>
+      <text
+        key={lvl}
+        x={p.x + 4}
+        y={p.y + 4}
+        fontSize="10"
+        fill="#9ca3af"
+        fontFamily="Inter,sans-serif"
+      >
+        {lvl}
+      </text>
     );
-  }
+  });
+
+  const axisLines = axes.map((a, i) => {
+    const end = polar(a.angle, maxR);
+    return (
+      <line
+        key={i}
+        x1={cx}
+        y1={cy}
+        x2={end.x}
+        y2={end.y}
+        stroke="#d1d5db"
+        strokeWidth="1"
+      />
+    );
+  });
+
+  const axisLabels = axes.map((a, i) => {
+    const p = polar(a.angle, maxR + 22);
+    return (
+      <text
+        key={i}
+        x={p.x}
+        y={p.y}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize="12"
+        fill="#6b7280"
+        fontFamily="Inter,sans-serif"
+      >
+        {a.label}
+      </text>
+    );
+  });
+
+  const dataPoints = pts(
+    axes.map((a) => polar(a.angle, (a.value / 100) * maxR)),
+  );
+
+  const dots = axes.map((a, i) => {
+    const p = polar(a.angle, (a.value / 100) * maxR);
+    return (
+      <circle
+        key={i}
+        cx={p.x}
+        cy={p.y}
+        r="5"
+        fill="#f59e0b"
+        stroke="#fff"
+        strokeWidth="2"
+      />
+    );
+  });
 
   return (
-    <div className="orientations-page">
-      <div className="orientations-wrapper">
-        {/* Header amélioré */}
-        <div className="orientations-header">
-          <h1>🎯 Mon rapport d'orientation RIASEC</h1>
-          <p className="report-date">Test effectué le {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          <div className="report-badge">
-            <span className="badge-code">Code RIASEC: <strong>{code}</strong></span>
-            <span className="badge-status">Statut: {status === 'COMPLETED' ? '✅ Terminé' : status === 'IN_PROGRESS' ? '🔄 En cours' : '⏸️ Abandonné'}</span>
-          </div>
-        </div>
-
-        {/* Carte de synthèse améliorée */}
-        <div className="summary-card">
-          <div className="summary-header">
-            <h2>📋 Synthèse de votre évaluation</h2>
-          </div>
-          <div className="summary-content">
-            <div className="summary-text">
-              <p>Basé sur la typologie de Holland, votre code RIASEC est <strong className="highlight-code">{code}</strong>. Ce code représente vos intérêts professionnels dominants et vous guide vers des métiers et formations adaptés à votre personnalité.</p>
-            </div>
-            <div className="stats-grid-enhanced">
-              <div className="stat-card">
-                <div className="stat-icon">🎯</div>
-                <div className="stat-info">
-                  <span className="stat-label">Code RIASEC</span>
-                  <strong className="stat-value-large">{code}</strong>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">⭐</div>
-                <div className="stat-info">
-                  <span className="stat-label">Type dominant</span>
-                  <strong className="stat-value">{topType?.name}</strong>
-                  <span className="stat-percent">{riasec[topType?.type] || 0}%</span>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">📊</div>
-                <div className="stat-info">
-                  <span className="stat-label">Progression</span>
-                  <strong className="stat-value">{completionPercentage}%</strong>
-                  <div className="mini-progress">
-                    <div className="mini-progress-fill" style={{ width: `${completionPercentage}%` }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hexagramme avec meilleure présentation */}
-        <div className="hexagramme-card">
-          <div className="card-header">
-            <h2>📊 Profil RIASEC - Hexagramme</h2>
-            <p>Visualisation de vos scores par type de personnalité</p>
-          </div>
-          <div className="hexagramme-content">
-            <div className="hexagramme-visual">
-              <svg width="300" height="300" viewBox="0 0 280 280">
-                <polygon
-                  points={hexagonPoints.map(p => `${p.x},${p.y}`).join(' ')}
-                  fill="none"
-                  stroke="#cbd5e1"
-                  strokeWidth="2"
-                />
-                {hexagonPoints.map((point, idx) => (
-                  <line
-                    key={idx}
-                    x1="120"
-                    y1="120"
-                    x2={point.x}
-                    y2={point.y}
-                    stroke="#cbd5e1"
-                    strokeWidth="1"
-                    strokeDasharray="4"
-                  />
-                ))}
-                <polygon
-                  points={dataPointsString}
-                  fill="rgba(59, 130, 246, 0.25)"
-                  stroke="#3B82F6"
-                  strokeWidth="3"
-                />
-                {dataPoints.map((point, idx) => (
-                  <circle
-                    key={idx}
-                    cx={point.x}
-                    cy={point.y}
-                    r="6"
-                    fill="#3B82F6"
-                    stroke="white"
-                    strokeWidth="2"
-                  />
-                ))}
-                <text x="120" y="12" textAnchor="middle" fontSize="13" fill="#EF4444" fontWeight="bold">R</text>
-                <text x="205" y="38" textAnchor="middle" fontSize="13" fill="#3B82F6" fontWeight="bold">I</text>
-                <text x="218" y="122" textAnchor="start" fontSize="13" fill="#8B5CF6" fontWeight="bold">A</text>
-                <text x="120" y="255" textAnchor="middle" fontSize="13" fill="#10B981" fontWeight="bold">S</text>
-                <text x="32" y="122" textAnchor="end" fontSize="13" fill="#F59E0B" fontWeight="bold">E</text>
-                <text x="25" y="38" textAnchor="middle" fontSize="13" fill="#6366F1" fontWeight="bold">C</text>
-                <circle cx="120" cy="120" r="4" fill="#94a3b8" />
-              </svg>
-            </div>
-            <div className="hexagramme-legend">
-              {types.map(type => (
-                <div key={type.type} className="legend-item">
-                  <span className="legend-color" style={{ backgroundColor: type.color }}></span>
-                  <span className="legend-type">{type.type}</span>
-                  <span className="legend-name">{type.name}</span>
-                  <span className="legend-score">{riasec[type.type] || 0}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Section profil améliorée */}
-        <div className="profile-card">
-          <div className="card-header">
-            <h2>🗺️ Analyse détaillée de votre profil</h2>
-          </div>
-          
-          <div className="dominant-types">
-            <h3>✨ Vos types dominants</h3>
-            <div className="dominant-cards">
-              {dominantTypes.map((type, idx) => (
-                <div key={type.type} className="dominant-card-enhanced" style={{ borderTopColor: type.color }}>
-                  <div className="dominant-rank">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</div>
-                  <div className="dominant-icon" style={{ backgroundColor: type.color + '20' }}>
-                    <span style={{ fontSize: '32px' }}>{type.icon}</span>
-                  </div>
-                  <div className="dominant-info">
-                    <div className="dominant-name">{type.name}</div>
-                    <div className="dominant-score">{riasec[type.type] || 0}%</div>
-                    <div className="dominant-bar">
-                      <div className="dominant-bar-fill" style={{ width: `${riasec[type.type] || 0}%`, backgroundColor: type.color }}></div>
-                    </div>
-                    <div className="dominant-desc">{type.details}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="profil-description-enhanced">
-            <h3>📖 Interprétation de votre profil</h3>
-            <p>{getProfilDescription()}</p>
-            <div className="interpretation-highlight">
-              <strong>💡 À retenir :</strong> {getInterpretation()}
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs améliorés */}
-        <div className="tabs-enhanced">
-          <button 
-            className={`tab-enhanced ${activeTab === 'radar' ? 'active' : ''}`}
-            onClick={() => setActiveTab('radar')}
-          >
-            <span className="tab-icon">📊</span>
-            <span>Scores détaillés</span>
-          </button>
-          <button 
-            className={`tab-enhanced ${activeTab === 'careers' ? 'active' : ''}`}
-            onClick={() => setActiveTab('careers')}
-          >
-            <span className="tab-icon">💼</span>
-            <span>Métiers recommandés</span>
-          </button>
-          <button 
-            className={`tab-enhanced ${activeTab === 'formations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('formations')}
-          >
-            <span className="tab-icon">🎓</span>
-            <span>Formations</span>
-          </button>
-        </div>
-
-        {activeTab === 'radar' && (
-          <div className="tab-content-enhanced">
-            <h3>📈 Vos scores par type RIASEC</h3>
-            <div className="scores-list-enhanced">
-              {types.map(type => (
-                <div key={type.type} className="score-card">
-                  <div className="score-card-header">
-                    <div className="score-icon" style={{ backgroundColor: type.bgColor }}>
-                      <span style={{ fontSize: '24px' }}>{type.icon}</span>
-                    </div>
-                    <div className="score-info">
-                      <div className="score-name">{type.name} ({type.type})</div>
-                      <div className="score-percent">{riasec[type.type] || 0}%</div>
-                    </div>
-                  </div>
-                  <div className="score-bar-container">
-                    <div className="score-bar" style={{ width: `${riasec[type.type] || 0}%`, backgroundColor: type.color }}></div>
-                  </div>
-                  <p className="score-desc-enhanced">{type.desc}</p>
-                  <details className="score-details">
-                    <summary>En savoir plus</summary>
-                    <p>{type.details}</p>
-                  </details>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'careers' && (
-          <div className="tab-content-enhanced">
-            <h3>💼 Métiers recommandés pour le profil <span className="code-highlight">{code}</span></h3>
-            <div className="careers-grid">
-              {recommendedCareers.length > 0 ? (
-                recommendedCareers.map((career, idx) => (
-                  <div key={idx} className="career-card">
-                    <div className="career-rank">{idx + 1}</div>
-                    <div className="career-info">
-                      <div className="career-name">{career.name}</div>
-                      {career.category && <div className="career-category">{career.category}</div>}
-                      {career.riasec_codes && (
-                        <div className="career-codes">
-                          {career.riasec_codes.map(c => (
-                            <span key={c} className="code-tag">{c}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-state">
-                  <p>Aucune recommandation disponible pour le moment.</p>
-                  <p>Les métiers seront bientôt disponibles selon votre profil.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'formations' && (
-          <div className="tab-content-enhanced">
-            <h3>🎓 Parcours de formation recommandés</h3>
-            <div className="formations-list">
-              {recommendedTrainings.length > 0 ? (
-                recommendedTrainings.map((training, idx) => (
-                  <div key={idx} className="formation-card">
-                    <div className="formation-icon">📖</div>
-                    <div className="formation-info">
-                      <div className="formation-name">{training.name}</div>
-                      {training.institution_id && (
-                        <div className="formation-institution">
-                          {trainingCenters.find(c => c.id === training.institution_id)?.name || 'Établissement partenaire'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-state">
-                  <p>Explorez nos partenaires formations pour découvrir les parcours adaptés à votre profil.</p>
-                </div>
-              )}
-            </div>
-
-            {trainingCenters.length > 0 && (
-              <>
-                <h3>🏫 Centres de formation partenaires</h3>
-                <div className="centers-grid">
-                  {trainingCenters.slice(0, 6).map((center, idx) => (
-                    <div key={idx} className="center-card">
-                      <div className="center-icon">🏛️</div>
-                      <div className="center-info">
-                        <div className="center-name">{center.name}</div>
-                        <div className="center-location">{center.city}{center.department ? ` - ${center.department}` : ''}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <div className="action-buttons-enhanced">
-              <button className="btn-print" onClick={() => window.print()}>
-                🖨️ Imprimer le rapport
-              </button>
-              <button className="btn-retest" onClick={() => {
-                localStorage.removeItem('session_token')
-                localStorage.removeItem('assessment_id');
-                navigate('/tests');
-              }}>
-                🔄 Refaire le test
-              </button>
-            </div>
-          </div>
-        )}
+    <div className="ria-radar-wrap">
+      <svg
+        width="400"
+        height="360"
+        viewBox="0 0 400 360"
+        style={{ overflow: "visible" }}
+      >
+        <g>{gridPolygons}</g>
+        <g>{scaleLabels}</g>
+        <g>{axisLines}</g>
+        <polygon
+          points={dataPoints}
+          fill="rgba(13,148,136,0.18)"
+          stroke="#0d9488"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+        <g>{axisLabels}</g>
+        <g>{dots}</g>
+      </svg>
+      <div className="ria-radar-legend">
+        <div className="ria-radar-legend-line" />
+        <span>Votre profil</span>
       </div>
     </div>
   );
-};
+}
 
-export default Orientations;
+/* ─── TAB CONTENT ─── */
+function TabInvestigateur({ scores, recommendations }) {
+  const score = scores?.INVESTIGATIVE || 0;
+  const reco =
+    recommendations?.INVESTIGATIVE || MOCK_RECOMMENDATIONS.INVESTIGATIVE;
+
+  return (
+    <>
+      <div className="ria-def-card">
+        <div className="ria-def-title">
+          <IconInfo /> Definition &amp; caracteristiques
+        </div>
+        <p className="ria-def-text">
+          L'axe Investigateur valorise la curiosite, l'analyse, la resolution de
+          problemes abstraits. Vous aimez apprendre, observer, experimenter et
+          comprendre le monde scientifique.
+        </p>
+        <p className="ria-def-traits">
+          <strong>Caracteristiques :</strong> Rigueur, esprit critique, gout
+          pour la recherche, autonomie intellectuelle, preference pour les defis
+          complexes.
+        </p>
+      </div>
+
+      <div className="ria-interp-card">
+        <div className="ria-interp-title">
+          <IconSearch size={16} /> Interpretation personnalisee
+        </div>
+        <p className="ria-interp-text">
+          Votre score ({score}/100) revele un besoin profond de comprendre les
+          mecanismes sous-jacents. Vous excellez dans les environnements ou l'on
+          vous confie des missions d'analyse, de R&amp;D ou de veille
+          technologique.
+        </p>
+      </div>
+
+      <div className="ria-def-card">
+        <div className="ria-reco-title">
+          <IconGrid /> Formations &amp; metiers recommandes
+        </div>
+        <div className="ria-reco-grid">
+          <div>
+            <div className="ria-reco-col-label">Formations</div>
+            <div className="ria-chip-list">
+              {reco.formations?.map((f, i) => (
+                <span key={i} className="ria-chip">
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="ria-reco-col-label">Metiers</div>
+            <div className="ria-chip-list">
+              {reco.metiers?.map((m, i) => (
+                <span key={i} className={`ria-chip ${i === 0 ? "active" : ""}`}>
+                  {m}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="ria-ecoles-title">
+          <IconHome size={18} /> Ecoles / Centres de formation
+        </div>
+        <div>
+          {reco.ecoles?.map((e, i) => (
+            <div className="ria-ecole-item" key={i}>
+              <span className="ria-ecole-dot" />
+              {e}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TabRealiste({ scores, recommendations }) {
+  const score = scores?.REALISTIC || 0;
+  const reco = recommendations?.REALISTIC || MOCK_RECOMMENDATIONS.REALISTIC;
+
+  return (
+    <>
+      <div className="ria-def-card">
+        <div className="ria-def-title">
+          <IconInfo /> Definition &amp; caracteristiques
+        </div>
+        <p className="ria-def-text">
+          L'axe Realiste valorise l'action concrete, la manipulation d'outils,
+          les travaux manuels et techniques. Vous preferez les taches tangibles,
+          pratiques et bien definies.
+        </p>
+        <p className="ria-def-traits">
+          <strong>Caracteristiques :</strong> Sens pratique, habilete manuelle,
+          gout pour la technique, autonomie operationnelle, preference pour les
+          resultats concrets.
+        </p>
+      </div>
+
+      <div className="ria-interp-card">
+        <div className="ria-interp-title">
+          <IconSearch size={16} /> Interpretation personnalisee
+        </div>
+        <p className="ria-interp-text">
+          Votre score ({score}/100) indique une forte inclination pour les
+          environnements de travail concrets. Vous vous epanouissez dans les
+          metiers de terrain, de fabrication ou d'ingenierie appliquee.
+        </p>
+      </div>
+
+      <div className="ria-def-card">
+        <div className="ria-reco-title">
+          <IconGrid /> Formations &amp; metiers recommandes
+        </div>
+        <div className="ria-reco-grid">
+          <div>
+            <div className="ria-reco-col-label">Formations</div>
+            <div className="ria-chip-list">
+              {reco.formations?.map((f, i) => (
+                <span key={i} className="ria-chip">
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="ria-reco-col-label">Metiers</div>
+            <div className="ria-chip-list">
+              {reco.metiers?.map((m, i) => (
+                <span key={i} className={`ria-chip ${i === 0 ? "active" : ""}`}>
+                  {m}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─── MAIN COMPONENT ─── */
+export default function Orientations() {
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState("investigative");
+
+  // Utiliser les données mockées
+  const scores = MOCK_SCORES;
+  const recommendations = MOCK_RECOMMENDATIONS;
+  const assessmentInfo = {
+    status: "COMPLETED",
+    completedAt: new Date().toISOString(),
+  };
+
+  // Trouver les scores dominants
+  const getDominantScores = () => {
+    if (!scores) return [];
+    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    return sorted.slice(0, 3);
+  };
+
+  const dominantScores = getDominantScores();
+  const topScoreValue = dominantScores[0]?.[1] || 0;
+
+  const code = dominantScores.map(([key]) => key[0]).join("");
+
+  return (
+    <div className="ria-body">
+      <div className="ria-container">
+        {/* PAGE HEADER */}
+        <div className="ria-page-header">
+          <div className="ria-page-header-icon">
+            <IconBarChart />
+          </div>
+          <h1>Explorateur de carrieres &mdash; Axes RIASEC</h1>
+          <span className="ria-dominant-badge">dominants detectes</span>
+        </div>
+
+        {/* HEADER RAPPORT */}
+        <div className="ria-card ria-header-card">
+          <div className="orientations-header">
+            <h1>🎯 Mon rapport d'orientation RIASEC</h1>
+            <p className="report-date">
+              Test effectué le{" "}
+              {new Date().toLocaleDateString("fr-FR", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+            <div className="report-badge">
+              <span className="badge-code">
+                Code RIASEC: <strong>{code}</strong>
+              </span>
+              <span className="badge-status">
+                Statut:{" "}
+                {status === "COMPLETED"
+                  ? "✅ Terminé"
+                  : status === "IN_PROGRESS"
+                    ? "🔄 En cours"
+                    : "⏸️ Abandonné"}
+              </span>
+              <span className="star-icon">&#9733;</span>
+              Score global de compatibilite : <strong>{topScoreValue}%</strong>
+            </div>
+          </div>
+          
+        </div>
+
+        {/* SECTION 1 : RESUME */}
+        <section className="ria-section">
+          <div className="ria-section-label">
+            <span className="ria-section-label-icon">
+              <IconInfo />
+            </span>
+            <h2>1. Resume du test</h2>
+          </div>
+          <div className="ria-card">
+            <div className="ria-card-subtitle">
+              <IconClipboard /> Synthese de l'evaluation
+            </div>
+            <p className="ria-summary-text">
+              Test d'interets professionnels et de personnalite base sur la
+              typologie de Holland (RIASEC). Objectif : identifier vos affinites
+              naturelles pour guider vos choix de formation et metier.
+            </p>
+            <ul className="ria-stats-list">
+              <li>
+                <strong>Statut :</strong>{" "}
+                {assessmentInfo?.status || "COMPLETED"}
+              </li>
+              <li>
+                <strong>Coherence des reponses :</strong> Élevée
+              </li>
+              <li>
+                <strong>Axes dominants detectes :</strong>{" "}
+                {dominantScores
+                  .map(([key, val]) => {
+                    const name =
+                      key === "INVESTIGATIVE"
+                        ? "Investigateur"
+                        : key === "REALISTIC"
+                          ? "Realiste"
+                          : key === "ENTERPRISING"
+                            ? "Entreprenant"
+                            : key === "SOCIAL"
+                              ? "Social"
+                              : key === "ARTISTIC"
+                                ? "Artistique"
+                                : "Conventionnel";
+                    return `${name}: ${val}/100`;
+                  })
+                  .join(" & ")}
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* SECTION 2 : DETAIL & OBSERVATIONS */}
+        <section className="ria-section">
+          <div className="ria-section-label">
+            <span className="ria-section-label-icon">
+              <IconBar />
+            </span>
+            <h2>2. Detail &amp; observations</h2>
+          </div>
+          <div className="ria-card">
+            <div className="ria-group-title teal">
+              <span className="dot" /> Points forts identifies
+            </div>
+
+            <div className="ria-obs-item">
+              <div className="ria-obs-icon-box teal">
+                <IconSearch size={16} />
+              </div>
+              <div>
+                <strong>Curiosite intellectuelle :</strong> Vous aimez resoudre
+                des problemes complexes et apprendre par vous-meme.
+              </div>
+            </div>
+            <div className="ria-obs-item">
+              <div className="ria-obs-icon-box teal">
+                <IconWrench />
+              </div>
+              <div>
+                <strong>Pragmatisme :</strong> Capacite a passer a l'action et a
+                manipuler des outils concrets.
+              </div>
+            </div>
+
+            <div className="ria-group-title amber">
+              <span className="dot" /> Axes d'amelioration
+            </div>
+
+            <div className="ria-obs-item">
+              <div className="ria-obs-icon-box amber">
+                <IconUsers />
+              </div>
+              <div>
+                <strong>Travail collaboratif :</strong> Developper la
+                collaboration en equipe.
+              </div>
+            </div>
+
+            <div className="ria-behavioral-note">
+              <IconInfo />
+              <span>
+                Analyse basee sur vos reponses au questionnaire RIASEC.
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 3 : PROFIL HEXAGRAMME */}
+        <section className="ria-section">
+          <div className="ria-section-label">
+            <span className="ria-section-label-icon">
+              <IconHome />
+            </span>
+            <h2>3. Profil utilisateur &mdash; Hexagramme RIASEC</h2>
+          </div>
+          <div className="ria-card">
+            <RadarChart scores={scores} />
+
+            <div className="ria-dominantes-title">
+              Votre carte des dominantes
+            </div>
+            <div className="ria-dominante-tags">
+              {dominantScores.map(([key, val], idx) => {
+                let colorClass = "teal";
+                if (idx === 1) colorClass = "gray";
+                if (idx === 2) colorClass = "amber";
+                let icon = <IconSearch size={13} />;
+                let label = key.charAt(0) + key.slice(1).toLowerCase();
+                if (key === "REALISTIC") {
+                  icon = <IconWrench size={13} />;
+                  label = "Realiste";
+                }
+                if (key === "ENTERPRISING") {
+                  icon = <IconTrend />;
+                  label = "Entreprenant";
+                }
+                if (key === "INVESTIGATIVE") label = "Investigateur";
+                if (key === "SOCIAL") label = "Social";
+                if (key === "ARTISTIC") label = "Artistique";
+                if (key === "CONVENTIONAL") label = "Conventionnel";
+
+                return (
+                  <span key={key} className={`ria-dominante-tag ${colorClass}`}>
+                    {icon} {label} ({val})
+                  </span>
+                );
+              })}
+            </div>
+
+            <p className="ria-profile-desc">
+              Votre profil met en evidence une forte appetence pour la{" "}
+              <strong>recherche, l'analyse</strong> et les activites
+              <strong> pratiques/manuelles</strong>. Les metiers d'ingenierie,
+              de R&amp;D ou de conception technique correspondent naturellement
+              a vos aspirations.
+            </p>
+          </div>
+        </section>
+
+        {/* SECTION 4 : EXPLORATEUR */}
+        <section className="ria-section">
+          <div className="ria-explorer-header">
+            <span className="ria-explorer-header-icon">
+              <IconSearch />
+            </span>
+            <h2>Explorateur de carrieres &mdash; Axes RIASEC</h2>
+          </div>
+
+          <div className="ria-tabs">
+            <button
+              className={`ria-tab${activeTab === "investigative" ? " active" : ""}`}
+              onClick={() => setActiveTab("investigative")}
+            >
+              Investigateur ({scores.INVESTIGATIVE})
+            </button>
+            <button
+              className={`ria-tab${activeTab === "realistic" ? " active" : ""}`}
+              onClick={() => setActiveTab("realistic")}
+            >
+              Realiste ({scores.REALISTIC})
+            </button>
+          </div>
+
+          {activeTab === "investigative" && (
+            <TabInvestigateur
+              scores={scores}
+              recommendations={recommendations}
+            />
+          )}
+          {activeTab === "realistic" && (
+            <TabRealiste scores={scores} recommendations={recommendations} />
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}

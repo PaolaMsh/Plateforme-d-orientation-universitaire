@@ -14,6 +14,7 @@ import UniversitiesPage from './pages/universites-formations';
 import HeaderParent from './components/headerParent';
 import Footer from './components/footer';
 import ScrollToTop from './components/ScrollToTop';
+import BoursesAides from './pages/bourses-aides';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, token } = useAuth();
@@ -71,6 +72,12 @@ function App() {
           <Route path="/orientations" element={
             <ProtectedRoute>
               <Orientations />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/bourses-aides" element={
+            <ProtectedRoute>
+              <BoursesAides />
             </ProtectedRoute>
           } />
           

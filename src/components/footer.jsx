@@ -22,6 +22,7 @@ const Footer = () => {
                     <ul className="footer-links">
                         <li><Link to="/tests-orientations">Tests d'orientation</Link></li>
                         <li><Link to="/metiers-porteurs">Métiers porteurs</Link></li>
+                        <li><Link to="/orientations">Orientation</Link></li>
                     </ul>
                 </div>
 
