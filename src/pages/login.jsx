@@ -28,20 +28,16 @@ const LoginPage = () => {
       
       console.log("Réponse complète:", response.data);
       
-      // Extraction des données selon ton format
       const { accessToken, refreshToken, data: userData } = response.data;
       
-      // Format de l'utilisateur pour ton contexte
       const user = {
         id: userData.sub,
         email: userData.email,
         role: userData.role
       };
       
-      // Appel de la fonction login avec user et token
       login(user, accessToken);
       
-      // Redirection vers l'accueil
       navigate("/accueil");
       
     } catch (error) {

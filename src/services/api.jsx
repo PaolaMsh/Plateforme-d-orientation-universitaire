@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const API_BASE_URL = 'http://192.168.150.134:3000/api/v1'; 
+if (!API_BASE_URL) {
+  console.error('VITE_API_URL n\'est pas définie dans .env');
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,7 +13,6 @@ const api = axios.create({
   },
   timeout: 10000,
 });
-
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
