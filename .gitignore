@@ -29,3 +29,4 @@ dist-ssr
 /.github/skills
 /.github/copilot-instructions.md
 /scripts
+.env

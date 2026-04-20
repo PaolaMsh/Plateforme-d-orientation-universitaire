@@ -19,7 +19,6 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Vérification de la force du mot de passe
   const isPasswordStrong = (pwd) => {
     const hasUpperCase = /[A-Z]/.test(pwd);
     const hasLowerCase = /[a-z]/.test(pwd);
@@ -30,7 +29,6 @@ const RegisterPage = () => {
     return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && isLongEnough;
   };
 
-  // Vérifier si le mot de passe est valide (tous les critères remplis)
   const isPasswordValid = () => {
     if (!password) return false;
     return isPasswordStrong(password);
@@ -108,7 +106,6 @@ const RegisterPage = () => {
     }
   };
 
-  // Vérification en temps réel
   const passwordStrength = {
     length: password.length >= 8,
     uppercase: /[A-Z]/.test(password),
@@ -227,7 +224,6 @@ const RegisterPage = () => {
               </div>
             )}
             
-            {/* Afficher un message de succès quand le mot de passe est valide */}
             {password && isPasswordValid() && (
               <div className="password-valid-message">
                 <FontAwesomeIcon icon={faCheck} className="valid-icon" />

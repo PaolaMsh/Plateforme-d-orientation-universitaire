@@ -5,35 +5,88 @@ import api from "../services/api";
 
 const EmotionSvgs = {
   sad: (
-    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg
+      viewBox="0 0 24 24"
+      width="32"
+      height="32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    >
       <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" />
       <circle cx="8" cy="9" r="1" fill="currentColor" />
       <circle cx="16" cy="9" r="1" fill="currentColor" />
-      <path d="M8 15 Q12 11 16 15" stroke="currentColor" fill="none" strokeLinecap="round" />
+      <path
+        d="M8 15 Q12 11 16 15"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   ),
   neutral: (
-    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg
+      viewBox="0 0 24 24"
+      width="32"
+      height="32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    >
       <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" />
       <circle cx="8" cy="9" r="1" fill="currentColor" />
       <circle cx="16" cy="9" r="1" fill="currentColor" />
-      <line x1="8" y1="15" x2="16" y2="15" stroke="currentColor" strokeLinecap="round" />
+      <line
+        x1="8"
+        y1="15"
+        x2="16"
+        y2="15"
+        stroke="currentColor"
+        strokeLinecap="round"
+      />
     </svg>
   ),
   happy: (
-    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg
+      viewBox="0 0 24 24"
+      width="32"
+      height="32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    >
       <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" />
       <circle cx="8" cy="9" r="1" fill="currentColor" />
       <circle cx="16" cy="9" r="1" fill="currentColor" />
-      <path d="M8 14 Q12 18 16 14" stroke="currentColor" fill="none" strokeLinecap="round" />
+      <path
+        d="M8 14 Q12 18 16 14"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   ),
 };
 
 const PHASE2_SECTIONS = [
-  { name: "OCCUPATIONS", label: "Réaliste", icon: "🔧", description: "Travail pratique et technique" },
-  { name: "APTITUDES", label: "Investigateur", icon: "🔬", description: "Exploration et analyse" },
-  { name: "PERSONALITY", label: "Artistique", icon: "🎨", description: "Créativité et expression" }
+  {
+    name: "OCCUPATIONS",
+    label: "Réaliste",
+    icon: "🔧",
+    description: "Travail pratique et technique",
+  },
+  {
+    name: "APTITUDES",
+    label: "Investigateur",
+    icon: "🔬",
+    description: "Exploration et analyse",
+  },
+  {
+    name: "PERSONNALITY",
+    label: "Artistique",
+    icon: "🎨",
+    description: "Créativité et expression",
+  }
 ];
 
 const BATCH_SIZE = 6;
@@ -41,302 +94,467 @@ const BATCH_SIZE = 6;
 const Test = () => {
   const navigate = useNavigate();
 
+  const [_status, _setStatus] = useState(null);
   const [currentPhase, setCurrentPhase] = useState(null);
   const [currentSection, setCurrentSection] = useState(null);
+  const [_currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completionPercentage, setCompletionPercentage] = useState(0);
+
   const [sessionToken, setSessionToken] = useState(null);
   const [assessmentId, setAssessmentId] = useState(null);
+
+  // Batch state (always exactly 6 or fewer)
   const [currentBatch, setCurrentBatch] = useState([]);
   const [draftAnswers, setDraftAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [loadingBatch, setLoadingBatch] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [phase2SectionsCompleted, setPhase2SectionsCompleted] = useState({});
 
-  // ============ INITIALISATION SESSION (CORRIGÉE) ============
+  // UI state
+  const [phase2SectionsCompleted, setPhase2SectionsCompleted] = useState({});
+  const [showConfirmPhase1, setShowConfirmPhase1] = useState(false);
+  const [showConfirmPhase2Complete, setShowConfirmPhase2Complete] =
+    useState(false);
+
+  // ============ Step 1: Initialize Session ============
   const initializeSession = async () => {
-  try {
-    const userToken = localStorage.getItem("token");
-    if (!userToken) {
-      setError("Veuillez vous connecter");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Veuillez vous connecter pour passer le test");
+        return null;
+      }
+
+      let existingSessionToken = localStorage.getItem("session_token");
+      let existingAssessmentId = localStorage.getItem("assessment_id");
+
+      if (existingSessionToken && existingAssessmentId) {
+        return {
+          sessionToken: existingSessionToken,
+          assessmentId: existingAssessmentId,
+        };
+      }
+          console.log("🔄 Création d'une nouvelle session...");
+
+
+      const response = await api.post("/sessions", {
+        testVersionId: 1,
+        initialAssessmentType: "FULL",
+        depth: 5,
+        profile: {
+          startedAt: new Date().toISOString(),
+          mode: "full",
+        },
+      });
+
+      if ( response.data) {
+        const newSessionToken = response.data.sessionToken;
+        const newAssessmentId = response.data.assessment.id;
+
+        localStorage.setItem("session_token", newSessionToken);
+        localStorage.setItem("assessment_id", newAssessmentId);
+
+        return {
+          sessionToken: newSessionToken,
+          assessmentId: newAssessmentId,
+        };
+      }
+      throw new Error("Erreur lors de l'initialisation");
+    } catch (err) {
+      console.error("Erreur initialisation:", err);
+      setError(
+        err.response?.data?.message || "Impossible d'initialiser le test",
+      );
       return null;
     }
+  };
 
-    // NETTOYAGE FORCÉ - Ajoute ces 2 lignes
-    localStorage.removeItem("session_token");
-    localStorage.removeItem("assessment_id");
-
-    // Création session
-    const response = await api.post("/sessions", {
-      testVersionId: 1,
-      initialAssessmentType: "PHASE1",
-      depth: 5,
-      profile: { startedAt: new Date().toISOString(), mode: "full" },
-    });
-
-    console.log("REPONSE BRUTE:", response.data);  // ← Ajoute cette ligne
-
-    // ADAPTE SELON CE QUE TU VOIS DANS LA CONSOLE
-    const newSessionToken = response.data.sessionToken;
-    const newAssessmentId = response.data.assessment?.id;
-
-    if (newSessionToken && newAssessmentId) {
-      localStorage.setItem("session_token", newSessionToken);
-      localStorage.setItem("assessment_id", newAssessmentId);
-      return { sessionToken: newSessionToken, assessmentId: newAssessmentId };
-    }
-
-    throw new Error("Session non créée");
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-};
-
-  // ============ RÉCUPÉRATION DE LA PROGRESSION (CORRIGÉE) ============
   const resolveProgress = async (token, assessmentIdParam) => {
-  if (!token || !assessmentIdParam) {
-    console.log("⏳ Pas encore de progression");
-    return { status: "IN_PROGRESS", currentPhase: "PHASE1", currentSection: null };
-  }
+    try {
+      if (!token || token === "null") {
+        console.log("⏳ Pas de token valide");
+        return { status: "IN_PROGRESS", currentPhase: "PHASE1", currentSection: null };
+      }
 
-  try {
-    const response = await api.get(`/assessments/${assessmentIdParam}/progress`, {
-      params: { sessionToken: token }
-    });
-    console.log("📊 Progression:", response.data);
-    
-    setCurrentPhase(response.data.currentPhase);
-    setCurrentSection(response.data.currentSection);
-    setCompletionPercentage(response.data.completionPercentage || 0);
-    return response.data;
-  } catch (err) {
-    console.log("ℹ️ Progression non trouvée, phase par défaut");
-    return { status: "IN_PROGRESS", currentPhase: "PHASE1", currentSection: null };
-  }
-};
+      // Récupérer la progression
+      const progressResponse = await api.get(`/assessments/${assessmentIdParam}/progress`, {
+        params: { sessionToken: token }
+      });
 
-  // ============ CHARGEMENT DES QUESTIONS (CORRIGÉ) ============
-  const fetchQuestions = async (phase, section = null) => {
-  if (!sessionToken) {
-    console.error("❌ Pas de sessionToken");
-    return false;
-  }
+      const progressData = progressResponse.data;
+      
+      setCurrentPhase(progressData.currentPhase);
+      setCurrentSection(progressData.currentSection);
+      setCompletionPercentage(progressData.completionPercentage || 0);
 
+      return progressData;
+    } catch (err) {
+      console.error("Erreur résolution progression:", err);
+      // Si erreur, on commence par défaut
+      return { status: "IN_PROGRESS", currentPhase: "PHASE1", currentSection: null };
+    }
+  };
+
+  // ============ Fetch Batch (6 questions) ============
+const fetchBatch = async (phase, section = null) => {
   try {
     setLoadingBatch(true);
     let response;
 
-    console.log(`🔍 Fetch ${phase} - section: ${section}`);
+    // Cache buster : timestamp pour éviter le cache
+    const cacheBuster = Date.now();
+
+    console.log(`🔍 Fetching ${phase} questions...`, { sessionToken, assessmentId, section });
 
     if (phase === "PHASE1") {
       response = await api.get("/questions/phase1", {
-        params: { sessionToken, lang: "fr", take: BATCH_SIZE }
+        params: {
+          sessionToken,
+           assessmentId,
+          lang: "fr",
+          take: BATCH_SIZE,
+        },
       });
     } else if (phase === "PHASE2" && section) {
-      response = await api.get("/questions/phase2", {
-        params: { sessionToken, assessmentId, section, lang: "fr", take: BATCH_SIZE }
+        response = await api.get("/questions/phase2", {
+        params: {
+          sessionToken,
+          assessmentId,
+          section,
+          lang: "fr",
+          take: BATCH_SIZE,
+        },
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'If-None-Match': '',  // Vide l'ETag
+          'If-Modified-Since': new Date(0).toUTCString()  // Force le rechargement
+        }
       });
+    } else {
+      throw new Error("Phase ou section invalide");
     }
 
-    console.log("📦 Réponse questions:", response.data);
+    console.log("📦 Réponse brute API:", response.data);
+    console.log("📦 Type de réponse:", typeof response.data);
+    console.log("📦 Est-ce un tableau?", Array.isArray(response.data));
+    console.log("📦 Longueur:", response.data?.length);
 
     if (response.data && response.data.length > 0) {
-      const formatted = response.data.map(q => ({
-        id: q.id,
-        text: q.text,
-        riasecType: q.riasecType,
-        phase: phase,
-        minValue: phase === "PHASE1" ? 1 : 1,
-        maxValue: phase === "PHASE1" ? 2 : 5,
-        valueLabels: phase === "PHASE1" ? ["Non", "Oui"] : ["Pas du tout", "Un peu", "Moyennement", "Assez", "Tout à fait"]
-      }));
-      setCurrentBatch(formatted);
+      const formattedQuestions = response.data.map((q) => {
+        const baseQuestion = {
+          id: q.id,
+          text: q.text,
+          riasecType: q.riasecType,
+          subtext: q.subtext || null,
+          pointsValue: q.pointsValue || 1,
+          phase,
+        };
+
+        if (phase === "PHASE1") {
+          return {
+            ...baseQuestion,
+            minValue: q.minValue || 1,
+            maxValue: q.maxValue || 3,
+            valueLabels: q.valueLabels || ["Non", "Oui"],
+          };
+        } else {
+          return {
+            ...baseQuestion,
+            section,
+            sectionType: q.sectionType,
+            minValue: q.minValue || 1,
+            maxValue: q.maxValue || 5,
+            valueLabels: q.valueLabels || ["Pas du tout", "Un peu", "Moyennement", "Assez", "Tout à fait"],
+          };
+        }
+      });
+
+      console.log("✅ Questions formatées:", formattedQuestions.length);
+      setCurrentBatch(formattedQuestions);
       setDraftAnswers({});
       return true;
+    } else {
+      console.error("⚠️ Aucune donnée dans la réponse:", response.data);
+      return false;
     }
-    return false;
   } catch (err) {
-    console.error("❌ Erreur fetchQuestions:", err);
-    setError(err.response?.data?.message || "Erreur chargement questions");
+    console.error(`❌ Erreur chargement ${phase}:`, err);
+    console.error("Détails erreur:", err.response?.data);
+    setError(
+      err.response?.data?.message || `Impossible de charger les questions`,
+    );
     return false;
   } finally {
     setLoadingBatch(false);
   }
 };
 
-  // ============ SOUMISSION DES RÉPONSES ============
+  // ============ Step 2: Handle Answers (Draft) ============
+  const handleAnswer = (questionId, value, question) => {
+    setDraftAnswers((prev) => ({
+      ...prev,
+      [questionId]: {
+        value,
+        riasecType: question.riasecType,
+      },
+    }));
+  };
+
+  // ============ Step 4: Submit Batch ============
   const submitBatch = async () => {
+    // Validate all questions answered
     if (Object.keys(draftAnswers).length !== currentBatch.length) {
       const remaining = currentBatch.length - Object.keys(draftAnswers).length;
-      alert(`Veuillez répondre à toutes les questions (${remaining} restantes)`);
+      alert(
+        `Veuillez répondre à toutes les questions (${remaining} restantes)`,
+      );
       return null;
     }
 
     setSubmitting(true);
     try {
-      const responses = Object.entries(draftAnswers).map(([questionId, responseValue]) => ({
-        questionId: parseInt(questionId),
-        responseValue: responseValue,
-      }));
+      const responses = Object.entries(draftAnswers).map(
+        ([questionId, answer]) => ({
+          questionId,
+          responseValue: answer.value,
 
-      const endpoint = currentPhase === "PHASE1" ? "/responses/phase1" : "/responses/phase2";
+        }),
+      );
 
-      console.log(`📤 Soumission ${endpoint}...`);
-      
+      const endpoint =
+        currentPhase === "PHASE1" ? "/responses/phase1" : "/responses/phase2";
+
       await api.post(endpoint, {
-        sessionToken: sessionToken,
-        assessmentId: assessmentId,
-        responses: responses,
+        sessionToken,
+        assessmentId,
+        responses,
       });
 
+      // Clear draft answers after successful submission
       setDraftAnswers({});
+
+      // Refetch progress immediately (backend is source of truth)
       const updatedProgress = await resolveProgress(sessionToken, assessmentId);
       return updatedProgress;
     } catch (err) {
-      console.error("❌ Erreur soumission:", err);
-      setError(err.response?.data?.message || "Impossible de soumettre les réponses");
+      console.error("Erreur soumission réponses:", err);
+      setError(
+        err.response?.data?.message || "Impossible de soumettre les réponses",
+      );
       return null;
     } finally {
       setSubmitting(false);
     }
   };
 
-  const calculateResults = async () => {
-    try {
-      console.log("📊 Calcul des résultats...");
-      await api.post("/results/compute", {
-        sessionToken: sessionToken,
-        assessmentId: assessmentId,
-        force: true,
-      });
-    } catch (err) {
-      console.error("❌ Erreur calcul résultats:", err);
-    }
-  };
-
-  const handleAnswer = (questionId, value) => {
-    setDraftAnswers((prev) => ({ ...prev, [questionId]: value }));
-  };
-
+  // ============ Step 5: Decision Logic (Backend-Driven) ============
   const handleBatchComplete = async () => {
+    // Submit current batch
     const progressData = await submitBatch();
     if (!progressData) return;
 
+    // Backend has now told us the new state
+    // Decision tree based on backend response
+
     if (progressData.status === "COMPLETED") {
-      await calculateResults();
-      navigate("/orientations", { state: { assessmentId, sessionToken } });
+      // Assessment is complete
+      handleAssessmentCompletion(progressData);
       return;
     }
 
+    // If we're here, assessment is still IN_PROGRESS
+    // Check phase status
+    const previousPhase = currentPhase;
     const newPhase = progressData.currentPhase;
-    const newSection = progressData.currentSection;
 
-    if (newPhase === "PHASE1") {
-      await fetchQuestions("PHASE1");
+    if (newPhase === "PHASE1" && previousPhase === "PHASE1") {
+      // Same phase, fetch next batch
+      const success = await fetchBatch("PHASE1");
+      if (!success) {
+        setError("Impossible de charger la prochaine batch");
+      }
     } else if (newPhase === "PHASE2") {
-      if (newSection && newSection !== currentSection) {
-        setPhase2SectionsCompleted(prev => ({ ...prev, [currentSection]: true }));
-        setCurrentSection(newSection);
-        await fetchQuestions("PHASE2", newSection);
-      } else if (currentPhase === "PHASE1" && newPhase === "PHASE2") {
-        await calculateResults();
-        setCurrentPhase("PHASE2");
+      if (previousPhase === "PHASE1") {
+        // Phase transition: 1 → 2
+        // Calculate results for Phase 1
+        try {
+          await api.post("/results/compute", {
+            sessionToken,
+            assessmentId,
+            force: true,
+          });
+        } catch (err) {
+          console.error("Erreur calcul Phase 1:", err);
+        }
+
+        // Load first batch of Phase 2
         const firstSection = PHASE2_SECTIONS[0].name;
-        setCurrentSection(firstSection);
-        await fetchQuestions("PHASE2", firstSection);
-      } else {
-        await fetchQuestions("PHASE2", currentSection);
+        const success = await fetchBatch(newPhase, firstSection);
+        if (!success) {
+          setError("Impossible de charger la Phase 2");
+        }
+      } else if (previousPhase === "PHASE2") {
+        // Still in Phase 2, check if section changed
+        if (progressData.currentSection !== currentSection) {
+          // Section changed, mark previous as completed
+          setPhase2SectionsCompleted((prev) => ({
+            ...prev,
+            [currentSection]: true,
+          }));
+
+          // Fetch first batch of new section
+          const success = await fetchBatch(
+            "PHASE2",
+            progressData.currentSection,
+          );
+          if (!success) {
+            setError("Impossible de charger la prochaine section");
+          }
+        } else {
+          // Same section, fetch next batch
+          const success = await fetchBatch("PHASE2", currentSection);
+          if (!success) {
+            setError("Impossible de charger la prochaine batch");
+          }
+        }
       }
     }
   };
 
-  const renderOptions = (question) => {
-    if (question.phase === "PHASE2") {
-      const options = [];
-      for (let i = question.minValue; i <= question.maxValue; i++) {
-        let label = question.valueLabels?.[i - 1] || String(i);
-        options.push({ value: i, label });
-      }
-      
-      return (
-        <div className="slider-options scale-options">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              className={`scale-btn ${draftAnswers[question.id] === opt.value ? "active" : ""}`}
-              onClick={() => handleAnswer(question.id, opt.value)}
-            >
-              <span className="scale-value">{opt.value}</span>
-              <span className="scale-label">{opt.label}</span>
-            </button>
-          ))}
-        </div>
-      );
+  // ============ Step 7: Completion Flow ============
+  const handleAssessmentCompletion = async () => {
+    try {
+      // Compute final results
+      await api.post("/results/compute", {
+        sessionToken,
+        assessmentId,
+      });
+
+      // Navigate to results
+      navigate("/orientations", { state: { assessmentId, sessionToken } });
+    } catch (err) {
+      console.error("Erreur finalisation:", err);
+      setError("Impossible de finaliser le test");
     }
-
-    const options = [
-      { value: 1, label: "Non" },
-      { value: 2, label: "Oui" },
-    ];
-
-    return (
-      <div className="slider-options">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            className={`emotion-btn ${draftAnswers[question.id] === option.value ? "active" : ""}`}
-            onClick={() => handleAnswer(question.id, option.value)}
-          >
-            <span className="emotion-label">{option.label}</span>
-            {draftAnswers[question.id] === option.value && <span className="check-mark">✓</span>}
-          </button>
-        ))}
-      </div>
-    );
   };
 
-  // ============ CHARGEMENT INITIAL ============
+  // ============ Step 6: Resume Logic ============
   useEffect(() => {
     const loadAssessment = async () => {
       setLoading(true);
       setError(null);
 
-      try {
-        // Nettoyer les anciennes valeurs si nécessaire
-        const oldToken = localStorage.getItem("session_token");
-        if (oldToken === "null" || oldToken === "undefined") {
-          localStorage.removeItem("session_token");
-          localStorage.removeItem("assessment_id");
-        }
+      localStorage.removeItem("session_token");
+    localStorage.removeItem("assessment_id");
 
+      try {
+        // Initialize or resume session
         const sessionData = await initializeSession();
         if (!sessionData) {
           setLoading(false);
           return;
         }
 
-        console.log("✅ Session data:", sessionData);
         setSessionToken(sessionData.sessionToken);
         setAssessmentId(sessionData.assessmentId);
 
-        const progressData = await resolveProgress(sessionData.sessionToken, sessionData.assessmentId);
+        // Resolve current progress from backend
+        const progressData = await resolveProgress(
+          sessionData.sessionToken,
+          sessionData.assessmentId,
+        );
 
+        // If already completed, redirect to results
         if (progressData.status === "COMPLETED") {
-          navigate("/orientations", { state: { assessmentId: sessionData.assessmentId, sessionToken: sessionData.sessionToken } });
+          navigate("/orientations", {
+            state: {
+              assessmentId: sessionData.assessmentId,
+              sessionToken: sessionData.sessionToken,
+            },
+          });
           return;
         }
 
+        // Load initial batch based on current phase
         const phase = progressData.currentPhase || "PHASE1";
-        const section = progressData.currentSection || (phase === "PHASE2" ? PHASE2_SECTIONS[0].name : null);
-        
-        setCurrentPhase(phase);
-        setCurrentSection(section);
-        
-        await fetchQuestions(phase, section);
+        const section =
+          progressData.currentSection ||
+          (phase === "PHASE2" ? PHASE2_SECTIONS[0].name : null);
+
+        // Fetch first batch
+        setLoadingBatch(true);
+        try {
+          let response;
+
+          if (phase === "PHASE1") {
+            response = await api.get("/questions/phase1", {
+              params: {
+                sessionToken: sessionData.sessionToken,
+                lang: "fr",
+                take: BATCH_SIZE,
+              },
+            });
+          } else if (phase === "PHASE2" && section) {
+            response = await api.get("/questions/phase2", {
+              params: {
+                sessionToken: sessionData.sessionToken,
+                assessmentId: sessionData.assessmentId,
+                section,
+                lang: "fr",
+                take: BATCH_SIZE,
+              },
+            });
+          }
+
+          if (
+            response?.data &&
+            response?.data.length > 0
+          ) {
+            const formattedQuestions = response.data.map((q) => {
+              const baseQuestion = {
+                id: q.id,
+                text: q.text,
+                riasecType: q.riasecType,
+                subtext: q.subtext || null,
+                pointsValue: q.pointsValue || 1,
+                phase,
+              };
+
+              if (phase === "PHASE1") {
+                return {
+                  ...baseQuestion,
+                  minValue: q.minValue || 1,
+                  maxValue: q.maxValue || 3,
+                  valueLabels: q.valueLabels || ["Non", "Oui"],
+                };
+              } else {
+                return {
+                  ...baseQuestion,
+                  section,
+                  sectionType: q.sectionType,
+                  minValue: q.minValue || 1,
+                  maxValue: q.maxValue || 5,
+                  valueLabels: q.valueLabels || ["Non", "Pas trop", "Oui"],
+                };
+              }
+            });
+
+            setCurrentBatch(formattedQuestions);
+          }
+        } catch (err) {
+          console.error(`Erreur chargement ${phase}:`, err);
+          setError(
+            err.response?.data?.message ||
+            `Impossible de charger les questions`,
+          );
+        } finally {
+          setLoadingBatch(false);
+        }
       } catch (err) {
-        console.error("❌ Erreur chargement évaluation:", err);
+        console.error("Erreur chargement évaluation:", err);
         setError(err.message || "Impossible de charger l'évaluation");
       } finally {
         setLoading(false);
@@ -346,17 +564,79 @@ const Test = () => {
     loadAssessment();
   }, [navigate]);
 
+  // ============ UI Helpers ============
   const allAnswered = Object.keys(draftAnswers).length === currentBatch.length;
-  const currentSectionData = currentPhase === "PHASE2" ? PHASE2_SECTIONS.find(s => s.name === currentSection) : null;
 
-  // Rendu JSX (simplifié mais fonctionnel)
+  const renderOptions = (question) => {
+    if (question.phase === "PHASE2") {
+      options.push({
+        value: 2,
+        label: "Pas trop",
+        emoji: EmotionSvgs.neutral,
+        order: 1,
+      });
+      option.sort((a, b) => a.order - b.order);
+      return (
+        <div className="slider-options scale-options">
+          {options.map((val) => (
+            <button
+              key={val}
+              className={`scale-btn ${draftAnswers[question.id]?.value === val ? "active" : ""
+                }`}
+              onClick={() => handleAnswer(question.id, val, question)}
+            >
+              <span className="scale-value">{val}</span>
+              {question.valueLabels && question.valueLabels[val - 1] && (
+                <span className="scale-label">
+                  {question.valueLabels[val - 1]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    let options = [
+      { value: 0, label: "Oui", emoji: EmotionSvgs.happy, order: 0 },
+      { value: 1, label: "Non", emoji: EmotionSvgs.sad, order: 2 },
+    ];
+
+    return (
+      <div className="slider-options">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            className={`emotion-btn ${draftAnswers[question.id]?.value === option.value ? "active" : ""
+              }`}
+            onClick={() => handleAnswer(question.id, option.value, question)}
+          >
+            <div className="emotion-svg">{option.emoji}</div>
+            <span className="emotion-label">{option.label}</span>
+            {draftAnswers[question.id]?.value === option.value && (
+              <span className="check-mark">✓</span>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // ============ Render ============
   if (loading) {
     return (
       <div className="test-page">
         <div className="test-container">
-          <div className="loader" style={{ textAlign: "center", padding: "50px" }}>
+          <div
+            className="loader"
+            style={{ textAlign: "center", padding: "50px" }}
+          >
             <div className="spinner"></div>
-            <p>Chargement du test...</p>
+            <p style={{ marginTop: "20px" }}>
+              {currentPhase === "PHASE1"
+                ? "Chargement de la Phase 1..."
+                : `Chargement de la section ${currentSection}...`}
+            </p>
           </div>
         </div>
       </div>
@@ -367,11 +647,28 @@ const Test = () => {
     return (
       <div className="test-page">
         <div className="test-container">
-          <div className="error-container" style={{ textAlign: "center", padding: "50px" }}>
-            <div className="error-message" style={{ color: "red", marginBottom: "20px" }}>
+          <div
+            className="error-container"
+            style={{ textAlign: "center", padding: "50px" }}
+          >
+            <div
+              className="error-message"
+              style={{ color: "red", marginBottom: "20px" }}
+            >
               <strong>Erreur :</strong> {error}
             </div>
-            <button onClick={() => window.location.reload()} className="submit-btn">
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                marginTop: "20px",
+                padding: "10px 20px",
+                backgroundColor: "#6246E5",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+            >
               Réessayer
             </button>
           </div>
@@ -379,6 +676,32 @@ const Test = () => {
       </div>
     );
   }
+
+  if (currentBatch.length === 0) {
+    return (
+      <div className="test-page">
+        <div className="test-container">
+          <div
+            className="error-container"
+            style={{ textAlign: "center", padding: "50px" }}
+          >
+            <p>Aucune question disponible</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="submit-btn"
+            >
+              Recharger
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentSectionData =
+    currentPhase === "PHASE2"
+      ? PHASE2_SECTIONS.find((s) => s.name === currentSection)
+      : null;
 
   return (
     <div className="test-page">
@@ -391,15 +714,28 @@ const Test = () => {
           <div className="progress-section">
             <div className="phase-indicator">
               <span className="phase-name">
-                {currentPhase === "PHASE1" ? "Phase 1 - Intérêts" : `Phase 2 - ${currentSectionData?.label || currentSection}`}
+                {currentPhase === "PHASE1"
+                  ? "Phase 1 - Intérêts"
+                  : `Phase 2 - ${currentSectionData?.label || currentSection}`}
+              </span>
+              <span className="phase-desc">
+                {currentPhase === "PHASE1"
+                  ? "Évaluation de vos intérêts professionnels"
+                  : currentSectionData?.description || "Évaluation approfondie"}
               </span>
             </div>
             <div className="progress-stats">
-              <span>{Object.keys(draftAnswers).length}/{currentBatch.length} questions</span>
+              <span>
+                {Object.keys(draftAnswers).length}/{currentBatch.length}{" "}
+                questions
+              </span>
               <span>{Math.round(completionPercentage)}%</span>
             </div>
             <div className="progress-bar-container">
-              <div className="progress-bar-fill" style={{ width: `${completionPercentage}%` }} />
+              <div
+                className="progress-bar-fill"
+                style={{ width: `${completionPercentage}%` }}
+              />
             </div>
           </div>
         </div>
@@ -407,18 +743,35 @@ const Test = () => {
         {currentPhase === "PHASE2" && (
           <div className="phase2-sections-indicator">
             {PHASE2_SECTIONS.map((section) => (
-              <div key={section.name} className={`section-badge ${section.name === currentSection ? "active" : ""}`}>
+              <div
+                key={section.name}
+                className={`section-badge ${section.name === currentSection ? "active" : ""
+                  } ${phase2SectionsCompleted[section.name] ? "completed" : ""}`}
+              >
                 <span className="section-icon">{section.icon}</span>
                 <span className="section-name">{section.label}</span>
+                {phase2SectionsCompleted[section.name] && (
+                  <span className="section-check">✓</span>
+                )}
               </div>
             ))}
           </div>
         )}
 
+        <div className="page-indicator-header">
+          <span>Batch - {currentBatch.length} questions</span>
+          {allAnswered && (
+            <span className="page-complete-badge">✓ Batch complète !</span>
+          )}
+        </div>
+
         {loadingBatch && (
-          <div className="loading-batch" style={{ textAlign: "center", padding: "30px" }}>
+          <div
+            className="loading-batch"
+            style={{ textAlign: "center", padding: "30px" }}
+          >
             <div className="spinner"></div>
-            <p>Chargement des questions...</p>
+            <p>Chargement de la prochaine batch...</p>
           </div>
         )}
 
@@ -426,20 +779,84 @@ const Test = () => {
           <>
             <div className="questions-grid">
               {currentBatch.map((question) => (
-                <div key={question.id} className={`question-card ${draftAnswers[question.id] ? "answered" : ""}`}>
+                <div
+                  key={question.id}
+                  className={`question-card ${draftAnswers[question.id] ? "answered" : ""
+                    }`}
+                >
                   <h3 className="question-text">{question.text}</h3>
-                  {question.subtext && <p className="question-subtext">{question.subtext}</p>}
-                  <div className="emotion-slider">{renderOptions(question)}</div>
+                  {question.subtext && (
+                    <p className="question-subtext">{question.subtext}</p>
+                  )}
+                  <div className="emotion-slider">
+                    {renderOptions(question)}
+                  </div>
                 </div>
               ))}
             </div>
 
             <div className="pagination-nav">
-              <button className="page-nav-btn next-btn" onClick={handleBatchComplete} disabled={!allAnswered || submitting || loadingBatch}>
+              <button
+                className="page-nav-btn next-btn"
+                onClick={handleBatchComplete}
+                disabled={!allAnswered || submitting || loadingBatch}
+              >
                 {submitting ? "Envoi..." : "Soumettre cette batch →"}
               </button>
             </div>
           </>
+        )}
+
+        {showConfirmPhase1 && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-icon">🎉</div>
+              <h3>Phase 1 terminée !</h3>
+              <p>Vous avez répondu à toutes les questions de la Phase 1.</p>
+              <div className="modal-buttons">
+                <button
+                  onClick={() => setShowConfirmPhase1(false)}
+                  className="modal-cancel"
+                  disabled={loading}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirmPhase1(false);
+                  }}
+                  className="modal-confirm"
+                  disabled={loading}
+                >
+                  {loading ? "Chargement..." : "Passer à la Phase 2 →"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showConfirmPhase2Complete && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-icon">🏆</div>
+              <h3>Félicitations !</h3>
+              <p>Vous avez terminé toutes les phases du test.</p>
+              <p style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>
+                Vos résultats vont maintenant être analysés.
+              </p>
+              <div className="modal-buttons">
+                <button
+                  onClick={() => {
+                    setShowConfirmPhase2Complete(false);
+                  }}
+                  className="modal-confirm"
+                  disabled={loading}
+                >
+                  {loading ? "Chargement..." : "Voir mes résultats →"}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
