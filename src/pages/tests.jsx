@@ -224,14 +224,8 @@ const fetchBatch = async (phase, section = null) => {
           section,
           lang: "fr",
           take: BATCH_SIZE,
+          cacheBuster, // empêche le cache côté client/serveur en rendant l'URL unique
         },
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-          'If-None-Match': '',  // Vide l'ETag
-          'If-Modified-Since': new Date(0).toUTCString()  // Force le rechargement
-        }
       });
     } else {
       throw new Error("Phase ou section invalide");
@@ -351,96 +345,90 @@ const fetchBatch = async (phase, section = null) => {
   };
 
   // ============ Step 5: Decision Logic (Backend-Driven) ============
-  const handleBatchComplete = async () => {
-    // Submit current batch
-    const progressData = await submitBatch();
-    if (!progressData) return;
+  // ============ Step 5: Decision Logic (Backend-Driven) ============
+const handleBatchComplete = async () => {
+  // Soumettre le lot actuel
+  const progressData = await submitBatch();
+  if (!progressData) return;
 
-    // Backend has now told us the new state
-    // Decision tree based on backend response
+  // Le backend nous donne le nouvel état
+  if (progressData.status === "COMPLETED") {
+    handleAssessmentCompletion();
+    return;
+  }
 
-    if (progressData.status === "COMPLETED") {
-      // Assessment is complete
-      handleAssessmentCompletion(progressData);
-      return;
+  // Si on est ici, l'évaluation est toujours IN_PROGRESS
+  const previousPhase = currentPhase;
+  const newPhase = progressData.currentPhase;
+
+  if (newPhase === "PHASE1" && previousPhase === "PHASE1") {
+    // Même phase, charger le prochain lot
+    const success = await fetchBatch("PHASE1");
+    if (!success) {
+      setError("Impossible de charger la prochaine batch");
     }
+  } else if (newPhase === "PHASE2" && previousPhase === "PHASE1") {
+    // Transition Phase 1 → Phase 2
+    // NE PAS calculer les résultats ici - le backend le fait automatiquement
+    // quand toutes les questions de la Phase 1 sont soumises
+    
+    // Mettre à jour l'UI pour montrer la transition
+    setCurrentPhase("PHASE2");
+    setCurrentSection(PHASE2_SECTIONS[0].name);
+    
+    // Charger le premier lot de la Phase 2
+    const success = await fetchBatch("PHASE2", PHASE2_SECTIONS[0].name);
+    if (!success) {
+      setError("Impossible de charger la Phase 2");
+    }
+  } else if (newPhase === "PHASE2" && previousPhase === "PHASE2") {
+    // Toujours en Phase 2, vérifier si la section a changé
+    if (progressData.currentSection !== currentSection) {
+      // Section changée, marquer la précédente comme complétée
+      setPhase2SectionsCompleted((prev) => ({
+        ...prev,
+        [currentSection]: true,
+      }));
+      
+      setCurrentSection(progressData.currentSection);
 
-    // If we're here, assessment is still IN_PROGRESS
-    // Check phase status
-    const previousPhase = currentPhase;
-    const newPhase = progressData.currentPhase;
-
-    if (newPhase === "PHASE1" && previousPhase === "PHASE1") {
-      // Same phase, fetch next batch
-      const success = await fetchBatch("PHASE1");
+      // Charger le premier lot de la nouvelle section
+      const success = await fetchBatch("PHASE2", progressData.currentSection);
+      if (!success) {
+        setError("Impossible de charger la prochaine section");
+      }
+    } else {
+      // Même section, charger le prochain lot
+      const success = await fetchBatch("PHASE2", currentSection);
       if (!success) {
         setError("Impossible de charger la prochaine batch");
       }
-    } else if (newPhase === "PHASE2") {
-      if (previousPhase === "PHASE1") {
-        // Phase transition: 1 → 2
-        // Calculate results for Phase 1
-        try {
-          await api.post("/results/compute", {
-            sessionToken,
-            assessmentId,
-            force: true,
-          });
-        } catch (err) {
-          console.error("Erreur calcul Phase 1:", err);
-        }
-
-        // Load first batch of Phase 2
-        const firstSection = PHASE2_SECTIONS[0].name;
-        const success = await fetchBatch(newPhase, firstSection);
-        if (!success) {
-          setError("Impossible de charger la Phase 2");
-        }
-      } else if (previousPhase === "PHASE2") {
-        // Still in Phase 2, check if section changed
-        if (progressData.currentSection !== currentSection) {
-          // Section changed, mark previous as completed
-          setPhase2SectionsCompleted((prev) => ({
-            ...prev,
-            [currentSection]: true,
-          }));
-
-          // Fetch first batch of new section
-          const success = await fetchBatch(
-            "PHASE2",
-            progressData.currentSection,
-          );
-          if (!success) {
-            setError("Impossible de charger la prochaine section");
-          }
-        } else {
-          // Same section, fetch next batch
-          const success = await fetchBatch("PHASE2", currentSection);
-          if (!success) {
-            setError("Impossible de charger la prochaine batch");
-          }
-        }
-      }
     }
-  };
+  }
+};
 
   // ============ Step 7: Completion Flow ============
-  const handleAssessmentCompletion = async () => {
-    try {
-      // Compute final results
-      await api.post("/results/compute", {
-        sessionToken,
-        assessmentId,
-      });
+const handleAssessmentCompletion = async () => {
+  try {
+    // Calculer les résultats finaux (maintenant que tout le test est complété)
+    await api.post("/results/compute", {
+      sessionToken,
+      assessmentId,
+    });
 
-      // Navigate to results
+    // Naviguer vers les résultats
+    navigate("/orientations", { state: { assessmentId, sessionToken } });
+  } catch (err) {
+    console.error("Erreur finalisation:", err);
+    // Si l'erreur persiste, essayer de récupérer les résultats existants
+    if (err.response?.status === 400) {
+      // Peut-être que les résultats existent déjà
       navigate("/orientations", { state: { assessmentId, sessionToken } });
-    } catch (err) {
-      console.error("Erreur finalisation:", err);
+    } else {
       setError("Impossible de finaliser le test");
     }
-  };
-
+  }
+};
   // ============ Step 6: Resume Logic ============
   useEffect(() => {
     const loadAssessment = async () => {
