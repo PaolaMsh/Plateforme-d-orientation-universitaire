@@ -17,77 +17,97 @@ import ScrollToTop from './components/ScrollToTop';
 import BoursesAides from './pages/bourses-aides';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, token } = useAuth();
-  const isAuth = isAuthenticated || token;
-  
-  if (!isAuth) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
+    const { isAuthenticated, token } = useAuth();
+    const isAuth = isAuthenticated || token;
+
+    if (!isAuth) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return children;
 };
 
 function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <ScrollToTop />
+    return (
+        <AuthProvider>
+            <Router>
+                <ScrollToTop />
 
-        <HeaderParent />
-        <Routes>
-          <Route path="/" element={<Navigate to="/accueil" replace />} />
-          <Route path="/accueil" element={<Home />} />
+                <HeaderParent />
+                <Routes>
+                    <Route path="/" element={<Navigate to="/accueil" replace />} />
+                    <Route path="/accueil" element={<Home />} />
 
-                    
-          <Route path="/universites-formations" element={
-            <ProtectedRoute>
-              <UniversitiesPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/metiers-porteurs" element={
-            <ProtectedRoute>
-              <MetiersPorteurs />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/support" element={
-            <ProtectedRoute>
-              <Support />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/tests-orientations" element={
-            <ProtectedRoute>
-              <Testsorientations />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/tests" element={
-            <ProtectedRoute>
-              <Test />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/orientations" element={
-            <ProtectedRoute>
-              <Orientations />
-            </ProtectedRoute>
-          } />
+                    <Route
+                        path="/universites-formations"
+                        element={
+                            <ProtectedRoute>
+                                <UniversitiesPage />
+                            </ProtectedRoute>
+                        }
+                    />
 
-          <Route path="/bourses-aides" element={
-            <ProtectedRoute>
-              <BoursesAides />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-        </Routes>
-        <Footer />
-      </Router>
-    </AuthProvider>
-  );
+                    <Route
+                        path="/metiers-porteurs"
+                        element={
+                            <ProtectedRoute>
+                                <MetiersPorteurs />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/support"
+                        element={
+                            <ProtectedRoute>
+                                <Support />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/tests-orientations"
+                        element={
+                            <ProtectedRoute>
+                                <Testsorientations />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/tests"
+                        element={
+                            <ProtectedRoute>
+                                <Test />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/orientations"
+                        element={
+                            <ProtectedRoute>
+                                <Orientations />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/bourses-aides"
+                        element={
+                            <ProtectedRoute>
+                                <BoursesAides />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                </Routes>
+                <Footer />
+            </Router>
+        </AuthProvider>
+    );
 }
 
 export default App;

@@ -1,7 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFacebookF, faTwitter, faInstagram, faLinkedinIn } from '@fortawesome/free-brands-svg-icons';
+import {
+    faFacebookF,
+    faTwitter,
+    faInstagram,
+    faLinkedinIn,
+} from '@fortawesome/free-brands-svg-icons';
 import '../styles/footer.css';
 
 const Footer = () => {
@@ -13,40 +18,63 @@ const Footer = () => {
                         <img src="/icone.jpg" alt="Orientation BJ" />
                     </Link>
                     <p className="footer-motto">
-                        Trouvez votre voie académique en quelques minutes, prenez le contrôle de votre avenir.
+                        Trouvez votre voie académique en quelques minutes, prenez le contrôle de
+                        votre avenir.
                     </p>
                 </div>
 
                 <div className="footer-section">
                     <h3>Orientation & Métiers</h3>
                     <ul className="footer-links">
-                        <li><Link to="/tests-orientations">Tests d'orientation</Link></li>
-                        <li><Link to="/metiers-porteurs">Métiers porteurs</Link></li>
-                        <li><Link to="/orientations">Orientation</Link></li>
+                        <li>
+                            <Link to="/tests-orientations">Tests d'orientation</Link>
+                        </li>
+                        <li>
+                            <Link to="/metiers-porteurs">Métiers porteurs</Link>
+                        </li>
+                        
                     </ul>
                 </div>
 
                 <div className="footer-section">
                     <h3>Ressources</h3>
                     <ul className="footer-links">
-                        <li><Link to="/bourses-aides">Bourses d'études</Link></li>
-                        <li><a href="https://apresmonbac.bj/" target="_blank" rel="noopener noreferrer">Plateforme Après Bac</a></li>
+                        <li>
+                            <Link to="/bourses-aides">Bourses d'études</Link>
+                        </li>
+                        <li>
+                            <a
+                                href="https://apresmonbac.bj/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Plateforme Après Bac
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
                 <div className="footer-section">
                     <h3>Universités & Écoles</h3>
                     <ul className="footer-links">
-                        <li><Link to="/universites-formations">Universités du Bénin</Link></li>
-                        <li><Link to="/ecoles-privees">Écoles privées</Link></li>
+                        <li>
+                            <Link to="/universites-formations">Universités du Bénin</Link>
+                        </li>
+                        <li>
+                            <Link to="/ecoles-privees">Écoles privées</Link>
+                        </li>
                     </ul>
                 </div>
 
                 <div className="footer-section">
                     <h3>Aide & Contact</h3>
                     <ul className="footer-links">
-                        <li><Link to="/support">À propos</Link></li>
-                        <li><Link to="/contact">Nous contacter</Link></li>
+                        <li>
+                            <Link to="/support">À propos</Link>
+                        </li>
+                        <li>
+                            <Link to="/contact">Nous contacter</Link>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -68,9 +96,7 @@ const Footer = () => {
                                 <FontAwesomeIcon icon={faLinkedinIn} />
                             </a>
                         </div>
-                        <p className="copyright">
-                            Tous droits réservés @orientation.bj
-                        </p>
+                        <p className="copyright">Tous droits réservés @orientation.bj</p>
                     </div>
                 </div>
             </div>

@@ -1,143 +1,143 @@
 .faq-page {
-  background: #f8f9fc;
-  min-height: 100vh;
+    background: #f8f9fc;
+    min-height: 100vh;
 }
 
 .faq-header {
-  background: linear-gradient(135deg, #6246E5 0%, #4C3AB5 100%);
-  color: white;
-  padding: 2rem 2rem 3rem;
-  text-align: center;
-  margin-top: 40px;
+    background: linear-gradient(135deg, #6246e5 0%, #4c3ab5 100%);
+    color: white;
+    padding: 2rem 2rem 3rem;
+    text-align: center;
+    margin-top: 40px;
 }
 
 .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: white;
-  text-decoration: none;
-  background: rgba(255,255,255,0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 40px;
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 40px;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
 }
 
 .back-link:hover {
-  background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .faq-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .faq-header p {
-  font-size: 1.2rem;
-  opacity: 0.9;
+    font-size: 1.2rem;
+    opacity: 0.9;
 }
 
 .faq-container {
-  max-width: 900px;
-  margin: -2rem auto 0;
-  background: white;
-  border-radius: 30px;
-  padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    max-width: 900px;
+    margin: -2rem auto 0;
+    background: white;
+    border-radius: 30px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .faq-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .faq-item {
-  background: #f9f9ff;
-  border-radius: 20px;
-  overflow: hidden;
-  transition: all 0.2s;
+    background: #f9f9ff;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.2s;
 }
 
 .faq-question {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 1.5rem;
-  background: #f9f9ff;
-  border: none;
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  color: #1A1A2E;
-  transition: background 0.2s;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    background: #f9f9ff;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    color: #1a1a2e;
+    transition: background 0.2s;
 }
 
 .faq-question:hover {
-  background: #f0edfe;
+    background: #f0edfe;
 }
 
 .faq-question span {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
 }
 
 .faq-icon {
-  color: #6246E5;
-  font-size: 1.2rem;
+    color: #6246e5;
+    font-size: 1.2rem;
 }
 
 .faq-answer {
-  padding: 0 1.5rem 1.5rem 1.5rem;
-  border-top: 1px solid #e0e0e0;
-  color: #4a4a5a;
-  line-height: 1.6;
-  background: white;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    color: #4a4a5a;
+    line-height: 1.6;
+    background: white;
 }
 
 .faq-footer {
-  text-align: center;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #eee;
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
 }
 
 .faq-footer p {
-  margin-bottom: 1rem;
-  color: #1A1A2E;
+    margin-bottom: 1rem;
+    color: #1a1a2e;
 }
 
 .contact-btn {
-  display: inline-block;
-  background: #6246E5;
-  color: white;
-  padding: 0.8rem 2rem;
-  border-radius: 40px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s;
-  margin-right: 3rem;
+    display: inline-block;
+    background: #6246e5;
+    color: white;
+    padding: 0.8rem 2rem;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    margin-right: 3rem;
 }
 
 .contact-btn:hover {
-  background: #4C3AB5;
-  transform: translateY(-2px);
+    background: #4c3ab5;
+    transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
-  .faq-header h1 {
-    font-size: 1.8rem;
-  }
-  .faq-container {
-    padding: 1rem;
-    margin: -1rem auto 0;
-  }
-  .faq-question {
-    padding: 1rem;
-    font-size: 0.9rem;
-  }
+    .faq-header h1 {
+        font-size: 1.8rem;
+    }
+    .faq-container {
+        padding: 1rem;
+        margin: -1rem auto 0;
+    }
+    .faq-question {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
 }

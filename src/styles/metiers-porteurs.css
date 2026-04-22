@@ -5,7 +5,13 @@
 }
 
 .metiers-container {
-    font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+        'Segoe UI',
+        'Poppins',
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
     background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
     min-height: 100vh;
     color: #1a2a3a;
@@ -28,7 +34,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23667eea' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") repeat-x bottom;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23667eea' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
+        repeat-x bottom;
     opacity: 0.6;
 }
 
@@ -45,11 +52,11 @@
     font-weight: 700;
     margin-bottom: 20px;
     color: white;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .hero-highlight {
-    background: linear-gradient(135deg, #FFD166, #F4A261, #E76F51);
+    background: linear-gradient(135deg, #ffd166, #f4a261, #e76f51);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -58,7 +65,7 @@
 
 .hero-subtitle {
     font-size: 1.2rem;
-    color: rgba(255,255,255,0.9);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 40px;
     line-height: 1.6;
 }
@@ -79,18 +86,18 @@
 .stat-number {
     font-size: 2.2rem;
     font-weight: 800;
-    color: #FFD166;
+    color: #ffd166;
 }
 
 .stat-label {
     font-size: 0.9rem;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .filter-section {
     background: white;
     padding: 40px 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .filter-container {
@@ -138,7 +145,7 @@
 }
 
 .filter-btn.active {
-    background: #E76F51;  /* ← Changé : orange au lieu de violet */
+    background: #e76f51; /* ← Changé : orange au lieu de violet */
     color: white;
     box-shadow: 0 4px 15px rgba(231, 111, 81, 0.3);
 }
@@ -163,13 +170,13 @@
     border-radius: 20px;
     padding: 25px;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
     cursor: pointer;
 }
 
 .job-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
 .job-card.expanded {
@@ -187,7 +194,7 @@
 .card-icon {
     width: 55px;
     height: 55px;
-    background: rgba(231, 111, 81, 0.1);  /* ← Changé : orange clair */
+    background: rgba(231, 111, 81, 0.1); /* ← Changé : orange clair */
     border-radius: 15px;
     display: flex;
     align-items: center;
@@ -209,7 +216,7 @@
 .demand-badge {
     display: inline-block;
     padding: 4px 12px;
-    background: linear-gradient(135deg, #FF6B6B, #EE5A24);
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
     color: white;
     font-size: 0.7rem;
     font-weight: 600;
@@ -240,7 +247,7 @@
 .details-section h4 {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #E76F51;  
+    color: #e76f51;
     margin-bottom: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -260,7 +267,7 @@
 }
 
 .importance-list li::before {
-    content: "✅";
+    content: '✅';
     position: absolute;
     left: 0;
     color: #48bb78;
@@ -304,7 +311,7 @@
     border-radius: 10px;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #E76F51;  
+    color: #e76f51;
     cursor: pointer;
     transition: all 0.3s ease;
     margin-top: 10px;
@@ -312,7 +319,7 @@
 
 .expand-btn:hover {
     background: rgba(231, 111, 81, 0.1);
-    border-color: #E76F51;
+    border-color: #e76f51;
 }
 
 .formation-section {
@@ -340,7 +347,7 @@
 }
 
 .formation-card {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 30px;
@@ -350,7 +357,7 @@
 
 .formation-card:hover {
     transform: translateY(-5px);
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .formation-icon {
@@ -367,7 +374,7 @@
 
 .formation-card p {
     font-size: 0.9rem;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
     line-height: 1.5;
 }
 
@@ -388,7 +395,7 @@
 .conseil-badge {
     display: inline-block;
     padding: 8px 20px;
-    background: linear-gradient(135deg, #FFD166, #F4A261);
+    background: linear-gradient(135deg, #ffd166, #f4a261);
     border-radius: 40px;
     font-size: 0.85rem;
     font-weight: 600;
@@ -438,40 +445,40 @@
     .hero-title {
         font-size: 2rem;
     }
-    
+
     .hero-subtitle {
         font-size: 1rem;
     }
-    
+
     .hero-stats {
         gap: 25px;
     }
-    
+
     .stat-number {
         font-size: 1.5rem;
     }
-    
+
     .jobs-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .filter-buttons {
         gap: 8px;
     }
-    
+
     .filter-btn {
         padding: 6px 14px;
         font-size: 0.8rem;
     }
-    
+
     .formation-title {
         font-size: 1.5rem;
     }
-    
+
     .conseil-content h2 {
         font-size: 1.5rem;
     }
-    
+
     .info-grid {
         grid-template-columns: 1fr;
     }
@@ -481,17 +488,17 @@
     .job-card {
         padding: 18px;
     }
-    
+
     .card-icon {
         width: 45px;
         height: 45px;
         font-size: 1.4rem;
     }
-    
+
     .job-title {
         font-size: 1.1rem;
     }
-    
+
     .tip {
         font-size: 0.8rem;
         padding: 8px 15px;

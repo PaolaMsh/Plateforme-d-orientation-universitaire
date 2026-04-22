@@ -78,15 +78,15 @@ const BATCH_SIZE = 6;
 const getPhase2ResponseOptions = (question) => {
     if (question.section === 'OCCUPATIONS' || question.section === 'PERSONNALITY') {
         return [
-            { value: 0, label: question.valueLabels?.[0] || 'Oui' },
-            { value: 1, label: question.valueLabels?.[1] || 'Non' },
+            { value: 0, label: 'Oui', emoji: EmotionSvgs.happy },
+            { value: 1, label: 'Non', emoji: EmotionSvgs.sad },
         ];
     }
 
     return [
-        { value: 1, label: question.valueLabels?.[0] || 'Faible' },
-        { value: 2, label: question.valueLabels?.[1] || 'Moyen' },
-        { value: 3, label: question.valueLabels?.[2] || 'Fort' },
+        { value: 1, label: 'Faible', emoji: EmotionSvgs.sad },
+        { value: 2, label: 'Moyen', emoji: EmotionSvgs.neutral },
+        { value: 3, label: 'Fort', emoji: EmotionSvgs.happy },
     ];
 };
 
@@ -179,18 +179,15 @@ const QuestionCard = ({ question, value, onAnswer }) => (
         {question.subtext && <p className="question-subtext">{question.subtext}</p>}
         <div className="emotion-slider">
             {question.phase === 'PHASE2' ? (
-                <div className="slider-options">
-                    {getPhase2ResponseOptions(question).map((opt, idx, arr) => (
+                <div className="slider-options scale-options">
+                    {getPhase2ResponseOptions(question).map((opt) => (
                         <button
                             key={opt.value}
-                            className={`emotion-btn ${value === opt.value ? 'active' : ''}`}
+                            className={`scale-btn ${value === opt.value ? 'active' : ''}`}
                             onClick={() => onAnswer(question.id, opt.value)}
                         >
-                            <div className="emotion-svg">
-                                {arr.length === 3 ? (idx === 0 ? EmotionSvgs.sad : idx === 1 ? EmotionSvgs.neutral : EmotionSvgs.happy) : (idx === 0 ? EmotionSvgs.happy : EmotionSvgs.sad)}
-                            </div>
-                            <span className="emotion-label">{opt.label}</span>
-                            {value === opt.value && <span className="check-mark">✓</span>}
+                            <span className="scale-value">{opt.value}</span>
+                            <span className="scale-label">{opt.label}</span>
                         </button>
                     ))}
                 </div>
@@ -232,7 +229,7 @@ const formatQuestions = (data, phase, section) =>
                 ...base,
                 minValue: q.minValue || 1,
                 maxValue: q.maxValue || 3,
-                valueLabels: q.valueLabels || ['Non', 'Oui'],
+                valueLabels: q.valueLabels || ['Non', { emoji: EmotionSvgs.happy, label: 'Oui' }],
             };
         return {
             ...base,
@@ -242,7 +239,7 @@ const formatQuestions = (data, phase, section) =>
             maxValue: section === 'APTITUDES' ? q.maxValue || 3 : 1,
             valueLabels:
                 q.valueLabels ||
-                (section === 'APTITUDES' ? ['Faible', 'Moyen', 'Fort'] : ['Oui', 'Non']),
+                (section === 'APTITUDES' ? ['Faible', { emoji: EmotionSvgs.neutral, label: 'Moyen' }, { emoji: EmotionSvgs.happy, label: 'Fort' }] : ['Oui', 'Non']),
         };
     });
 
@@ -255,7 +252,6 @@ const Test = () => {
     const [completionPercentage, setCompletionPercentage] = useState(0);
     const [sessionToken, setSessionToken] = useState(null);
     const [assessmentId, setAssessmentId] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
 
     const [currentBatch, setCurrentBatch] = useState([]);
     const [draftAnswers, setDraftAnswers] = useState({});
@@ -431,24 +427,20 @@ const Test = () => {
         if (newPhase === 'PHASE1' && previousPhase === 'PHASE1') {
             const success = await fetchBatch('PHASE1');
             if (!success) setError('Impossible de charger la prochaine batch');
-            else setCurrentPage((p) => p + 1);
         } else if (newPhase === 'PHASE2' && previousPhase === 'PHASE1') {
             setCurrentPhase('PHASE2');
             setCurrentSection(PHASE2_SECTIONS[0].name);
-            setCurrentPage(1);
             const success = await fetchBatch('PHASE2', PHASE2_SECTIONS[0].name);
             if (!success) setError('Impossible de charger la Phase 2');
         } else if (newPhase === 'PHASE2' && previousPhase === 'PHASE2') {
             if (progressData.currentSection !== currentSection) {
                 setPhase2SectionsCompleted((p) => ({ ...p, [currentSection]: true }));
                 setCurrentSection(progressData.currentSection);
-                setCurrentPage(1);
                 const success = await fetchBatch('PHASE2', progressData.currentSection);
                 if (!success) setError('Impossible de charger la prochaine section');
             } else {
                 const success = await fetchBatch('PHASE2', currentSection);
                 if (!success) setError('Impossible de charger la prochaine batch');
-                else setCurrentPage((p) => p + 1);
             }
         }
     }, [currentPhase, currentSection, fetchBatch, submitBatch]);
@@ -501,7 +493,6 @@ const Test = () => {
                     sessionData.sessionToken,
                     sessionData.assessmentId,
                 );
-                setCurrentPage(1);
             } catch (err) {
                 setError(err.message || "Impossible de charger l'évaluation");
             } finally {
@@ -579,8 +570,8 @@ const Test = () => {
                 )}
 
                 <div className="page-indicator-header">
-                    <span>Page {currentPage} sur ...</span>
-                    {allAnswered && <span className="page-complete-badge">✓ Page complète !</span>}
+                    <span>Batch - {currentBatch.length} questions</span>
+                    {allAnswered && <span className="page-complete-badge">✓ Batch complète !</span>}
                 </div>
 
                 {loadingBatch ? (

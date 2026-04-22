@@ -1,15 +1,22 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/header.css';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faChevronDown, faUserCircle, faGraduationCap, faArrowRightToBracket } from '@fortawesome/free-solid-svg-icons';
-import { useAuth } from "../context/authContext";
+import {
+    faUser,
+    faSignOutAlt,
+    faChevronDown,
+    faUserCircle,
+    faGraduationCap,
+    faArrowRightToBracket,
+} from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../context/authContext';
 
 const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { isAuthenticated, user, logout } = useAuth();
-    
+
     const [showMenu, setShowMenu] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const menuRef = useRef(null);
@@ -53,8 +60,8 @@ const Header = () => {
                 setShowLogoutConfirm(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     return (
@@ -69,19 +76,34 @@ const Header = () => {
                 </Link>
 
                 <nav className="nav-menu">
-                    <Link to="/accueil" className={`nav-link ${location.pathname === '/accueil' ? 'active' : ''}`}>
+                    <Link
+                        to="/accueil"
+                        className={`nav-link ${location.pathname === '/accueil' ? 'active' : ''}`}
+                    >
                         Accueil
                     </Link>
-                    <Link to="/tests-orientations" className={`nav-link ${location.pathname === '/tests-orientations' ? 'active' : ''}`}>
+                    <Link
+                        to="/tests-orientations"
+                        className={`nav-link ${location.pathname === '/tests-orientations' ? 'active' : ''}`}
+                    >
                         Tests et Orientations
                     </Link>
-                    <Link to="/universites-formations" className={`nav-link ${location.pathname === '/universites-formations' ? 'active' : ''}`}>
+                    <Link
+                        to="/universites-formations"
+                        className={`nav-link ${location.pathname === '/universites-formations' ? 'active' : ''}`}
+                    >
                         Universités et Formations
                     </Link>
-                    <Link to="/bourses-aides" className={`nav-link ${location.pathname === '/bourses-aides' ? 'active' : ''}`}>
+                    <Link
+                        to="/bourses-aides"
+                        className={`nav-link ${location.pathname === '/bourses-aides' ? 'active' : ''}`}
+                    >
                         Bourses et Aides
                     </Link>
-                    <Link to="/support" className={`nav-link ${location.pathname === '/support' ? 'active' : ''}`}>
+                    <Link
+                        to="/support"
+                        className={`nav-link ${location.pathname === '/support' ? 'active' : ''}`}
+                    >
                         Support
                     </Link>
                 </nav>
@@ -91,9 +113,9 @@ const Header = () => {
                         <div className="user-avatar">
                             <FontAwesomeIcon icon={faUserCircle} className="default-avatar" />
                         </div>
-                        <FontAwesomeIcon 
-                            icon={faChevronDown} 
-                            className={`dropdown-icon ${showMenu ? 'open' : ''}`} 
+                        <FontAwesomeIcon
+                            icon={faChevronDown}
+                            className={`dropdown-icon ${showMenu ? 'open' : ''}`}
                         />
                     </button>
 
@@ -106,7 +128,10 @@ const Header = () => {
                                             <FontAwesomeIcon icon={faUser} />
                                             <span>Mon profil</span>
                                         </button>
-                                        <button onClick={handleAccessParcours} className="menu-item">
+                                        <button
+                                            onClick={handleAccessParcours}
+                                            className="menu-item"
+                                        >
                                             <FontAwesomeIcon icon={faGraduationCap} />
                                             <span>Mon parcours</span>
                                         </button>
@@ -122,7 +147,10 @@ const Header = () => {
                                     <div className="logout-confirmation">
                                         <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
                                         <div className="confirmation-buttons">
-                                            <button onClick={handleLogout} className="confirm-button">
+                                            <button
+                                                onClick={handleLogout}
+                                                className="confirm-button"
+                                            >
                                                 Confirmer
                                             </button>
                                             <button
@@ -136,11 +164,17 @@ const Header = () => {
                                 )
                             ) : (
                                 <>
-                                    <button onClick={handleLoginClick} className="menu-item login-item">
+                                    <button
+                                        onClick={handleLoginClick}
+                                        className="menu-item login-item"
+                                    >
                                         <FontAwesomeIcon icon={faArrowRightToBracket} />
                                         <span>Se connecter</span>
                                     </button>
-                                    <button onClick={handleRegisterClick} className="menu-item register-item">
+                                    <button
+                                        onClick={handleRegisterClick}
+                                        className="menu-item register-item"
+                                    >
                                         <FontAwesomeIcon icon={faUser} />
                                         <span>S'inscrire</span>
                                     </button>
