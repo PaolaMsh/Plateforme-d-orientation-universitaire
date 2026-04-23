@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../styles/orientations.css';
 
 const IconDoc = () => (
@@ -479,7 +479,7 @@ function TabRealiste({ scores, recommendations }) {
 
 /* ─── MAIN COMPONENT ─── */
 export default function Orientations() {
-    const location = useLocation();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('investigative');
 
     // Utiliser les données mockées
@@ -499,7 +499,6 @@ export default function Orientations() {
 
     const dominantScores = getDominantScores();
     const topScoreValue = dominantScores[0]?.[1] || 0;
-
     const code = dominantScores.map(([key]) => key[0]).join('');
 
     return (
@@ -532,9 +531,9 @@ export default function Orientations() {
                             </span>
                             <span className="badge-status">
                                 Statut:{' '}
-                                {status === 'COMPLETED'
+                                {assessmentInfo?.status === 'COMPLETED'
                                     ? '✅ Terminé'
-                                    : status === 'IN_PROGRESS'
+                                    : assessmentInfo?.status === 'IN_PROGRESS'
                                       ? '🔄 En cours'
                                       : '⏸️ Abandonné'}
                             </span>
@@ -726,6 +725,23 @@ export default function Orientations() {
                         <TabRealiste scores={scores} recommendations={recommendations} />
                     )}
                 </section>
+
+                {/* BOUTONS DE NAVIGATION */}
+                <div className="Buttons">
+                    <button 
+                        className="button"
+                        onClick={() => navigate('/tests')}
+                    >
+                        Retour
+                    </button>
+
+                    <button 
+                        className="button"
+                        onClick={() => navigate('/universites-formations')}
+                    >
+                        Voir les écoles
+                    </button>
+                </div>
             </div>
         </div>
     );

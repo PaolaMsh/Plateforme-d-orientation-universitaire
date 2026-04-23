@@ -75,21 +75,6 @@ const PHASE2_SECTIONS = [
 
 const BATCH_SIZE = 6;
 
-const getPhase2ResponseOptions = (question) => {
-    if (question.section === 'OCCUPATIONS' || question.section === 'PERSONNALITY') {
-        return [
-            { value: 0, label: 'Oui', emoji: EmotionSvgs.happy },
-            { value: 1, label: 'Non', emoji: EmotionSvgs.sad },
-        ];
-    }
-
-    return [
-        { value: 1, label: 'Faible', emoji: EmotionSvgs.sad },
-        { value: 2, label: 'Moyen', emoji: EmotionSvgs.neutral },
-        { value: 3, label: 'Fort', emoji: EmotionSvgs.happy },
-    ];
-};
-
 const Loader = ({ text }) => (
     <div className="loader" style={{ textAlign: 'center', padding: '50px' }}>
         <div className="spinner"></div>
@@ -173,30 +158,38 @@ const ProgressHeader = ({
     );
 };
 
-const QuestionCard = ({ question, value, onAnswer }) => (
-    <div className={`question-card ${value !== undefined ? 'answered' : ''}`}>
-        <h3 className="question-text">{question.text}</h3>
-        {question.subtext && <p className="question-subtext">{question.subtext}</p>}
-        <div className="emotion-slider">
-            {question.phase === 'PHASE2' ? (
-                <div className="slider-options scale-options">
-                    {getPhase2ResponseOptions(question).map((opt) => (
-                        <button
-                            key={opt.value}
-                            className={`scale-btn ${value === opt.value ? 'active' : ''}`}
-                            onClick={() => onAnswer(question.id, opt.value)}
-                        >
-                            <span className="scale-value">{opt.value}</span>
-                            <span className="scale-label">{opt.label}</span>
-                        </button>
-                    ))}
-                </div>
-            ) : (
+const QuestionCard = ({ question, value, onAnswer }) => {
+    const getOptions = () => {
+        if (question.phase === 'PHASE1') {
+            return [
+                { value: 0, label: 'Oui', emoji: EmotionSvgs.happy },
+                { value: 1, label: 'Non', emoji: EmotionSvgs.sad },
+            ];
+        }
+
+        if (question.section === 'APTITUDES') {
+            return [
+                { value: 1, label: 'Faible', emoji: EmotionSvgs.sad },
+                { value: 2, label: 'Moyen', emoji: EmotionSvgs.neutral },
+                { value: 3, label: 'Fort', emoji: EmotionSvgs.happy },
+            ];
+        }
+
+        return [
+            { value: 0, label: 'Oui', emoji: EmotionSvgs.happy },
+            { value: 1, label: 'Non', emoji: EmotionSvgs.sad },
+        ];
+    };
+
+    const options = getOptions();
+
+    return (
+        <div className={`question-card ${value !== undefined ? 'answered' : ''}`}>
+            <h3 className="question-text">{question.text}</h3>
+            {question.subtext && <p className="question-subtext">{question.subtext}</p>}
+            <div className="emotion-slider">
                 <div className="slider-options">
-                    {[
-                        { value: 0, label: 'Oui', emoji: EmotionSvgs.happy },
-                        { value: 1, label: 'Non', emoji: EmotionSvgs.sad },
-                    ].map((opt) => (
+                    {options.map((opt) => (
                         <button
                             key={opt.value}
                             className={`emotion-btn ${value === opt.value ? 'active' : ''}`}
@@ -208,12 +201,11 @@ const QuestionCard = ({ question, value, onAnswer }) => (
                         </button>
                     ))}
                 </div>
-            )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
-// --- Helpers (formatting, API wrappers) ---
 const formatQuestions = (data, phase, section) =>
     data.map((q) => {
         const base = {
@@ -239,19 +231,26 @@ const formatQuestions = (data, phase, section) =>
             maxValue: section === 'APTITUDES' ? q.maxValue || 3 : 1,
             valueLabels:
                 q.valueLabels ||
-                (section === 'APTITUDES' ? ['Faible', { emoji: EmotionSvgs.neutral, label: 'Moyen' }, { emoji: EmotionSvgs.happy, label: 'Fort' }] : ['Oui', 'Non']),
+                (section === 'APTITUDES'
+                    ? [
+                          'Faible',
+                          { emoji: EmotionSvgs.neutral, label: 'Moyen' },
+                          { emoji: EmotionSvgs.happy, label: 'Fort' },
+                      ]
+                    : ['Oui', 'Non']),
         };
     });
 
 const Test = () => {
     const navigate = useNavigate();
 
-    // State (kept minimal and explicit)
     const [currentPhase, setCurrentPhase] = useState(null);
     const [currentSection, setCurrentSection] = useState(null);
     const [completionPercentage, setCompletionPercentage] = useState(0);
     const [sessionToken, setSessionToken] = useState(null);
     const [assessmentId, setAssessmentId] = useState(null);
+    const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
+    const [totalBatches, setTotalBatches] = useState(0);
 
     const [currentBatch, setCurrentBatch] = useState([]);
     const [draftAnswers, setDraftAnswers] = useState({});
@@ -263,7 +262,6 @@ const Test = () => {
     const [showConfirmPhase1, setShowConfirmPhase1] = useState(false);
     const [showConfirmPhase2Complete, setShowConfirmPhase2Complete] = useState(false);
 
-    // --- API interactions encapsulated ---
     const initializeSession = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
@@ -357,12 +355,14 @@ const Test = () => {
                     const formatted = formatQuestions(response.data, phase, section);
                     setCurrentBatch(formatted);
                     setDraftAnswers({});
+                    setTotalBatches(1);
                     return true;
                 }
                 setError('Aucune donnée reçue');
                 return false;
             } catch (err) {
-                setError(err.response?.data?.message || `Impossible de charger les questions`);
+                console.error('Fetch batch error:', err);
+                setError(err.response?.data?.message || 'Impossible de charger les questions');
                 return false;
             } finally {
                 setLoadingBatch(false);
@@ -399,7 +399,7 @@ const Test = () => {
                           sessionToken,
                           assessmentId,
                           responses: Object.entries(draftAnswers).map(([questionId, answer]) => ({
-                              questionId,
+                              questionId: Number(questionId),
                               responseValue: answer.value,
                           })),
                       };
@@ -408,42 +408,54 @@ const Test = () => {
             const updatedProgress = await resolveProgress(sessionToken, assessmentId);
             return updatedProgress;
         } catch (err) {
+            console.error('Submit error:', err);
             setError(err.response?.data?.message || 'Impossible de soumettre les réponses');
             return null;
         } finally {
             setSubmitting(false);
         }
-    }, [draftAnswers, currentBatch, currentPhase, sessionToken, assessmentId, resolveProgress]);
+    }, [draftAnswers, currentBatch, currentPhase, currentSection, sessionToken, assessmentId, resolveProgress]);
+
+    const handlePreviousBatch = useCallback(async () => {
+        // Pour l'instant, pas de pagination réelle car l'API ne supporte pas skip
+        // On pourrait implémenter un cache des réponses précédentes
+        alert('Navigation vers la page précédente non disponible pour le moment');
+    }, []);
 
     const handleBatchComplete = useCallback(async () => {
         const progressData = await submitBatch();
         if (!progressData) return;
+        
         if (progressData.status === 'COMPLETED') {
             handleAssessmentCompletion();
             return;
         }
+        
         const previousPhase = currentPhase;
         const newPhase = progressData.currentPhase;
+        
         if (newPhase === 'PHASE1' && previousPhase === 'PHASE1') {
-            const success = await fetchBatch('PHASE1');
+            const success = await fetchBatch('PHASE1', null, sessionToken, assessmentId);
             if (!success) setError('Impossible de charger la prochaine batch');
-        } else if (newPhase === 'PHASE2' && previousPhase === 'PHASE1') {
+        } 
+        else if (newPhase === 'PHASE2' && previousPhase === 'PHASE1') {
             setCurrentPhase('PHASE2');
             setCurrentSection(PHASE2_SECTIONS[0].name);
-            const success = await fetchBatch('PHASE2', PHASE2_SECTIONS[0].name);
+            const success = await fetchBatch('PHASE2', PHASE2_SECTIONS[0].name, sessionToken, assessmentId);
             if (!success) setError('Impossible de charger la Phase 2');
-        } else if (newPhase === 'PHASE2' && previousPhase === 'PHASE2') {
+        } 
+        else if (newPhase === 'PHASE2' && previousPhase === 'PHASE2') {
             if (progressData.currentSection !== currentSection) {
                 setPhase2SectionsCompleted((p) => ({ ...p, [currentSection]: true }));
                 setCurrentSection(progressData.currentSection);
-                const success = await fetchBatch('PHASE2', progressData.currentSection);
+                const success = await fetchBatch('PHASE2', progressData.currentSection, sessionToken, assessmentId);
                 if (!success) setError('Impossible de charger la prochaine section');
             } else {
-                const success = await fetchBatch('PHASE2', currentSection);
+                const success = await fetchBatch('PHASE2', currentSection, sessionToken, assessmentId);
                 if (!success) setError('Impossible de charger la prochaine batch');
             }
         }
-    }, [currentPhase, currentSection, fetchBatch, submitBatch]);
+    }, [currentPhase, currentSection, fetchBatch, submitBatch, sessionToken, assessmentId]);
 
     const handleAssessmentCompletion = useCallback(async () => {
         try {
@@ -456,13 +468,11 @@ const Test = () => {
         }
     }, [sessionToken, assessmentId, navigate]);
 
-    // --- Effects: load initial assessment ---
     useEffect(() => {
         const loadAssessment = async () => {
             setLoading(true);
             setError(null);
             try {
-                // Try to initialize or resume
                 const sessionData = await initializeSession();
                 if (!sessionData) {
                     setLoading(false);
@@ -484,16 +494,10 @@ const Test = () => {
                     return;
                 }
                 const phase = progressData.currentPhase || 'PHASE1';
-                const section =
-                    progressData.currentSection ||
-                    (phase === 'PHASE2' ? PHASE2_SECTIONS[0].name : null);
-                await fetchBatch(
-                    phase,
-                    section,
-                    sessionData.sessionToken,
-                    sessionData.assessmentId,
-                );
+                const section = progressData.currentSection || (phase === 'PHASE2' ? PHASE2_SECTIONS[0].name : null);
+                await fetchBatch(phase, section, sessionData.sessionToken, sessionData.assessmentId);
             } catch (err) {
+                console.error('Load assessment error:', err);
                 setError(err.message || "Impossible de charger l'évaluation");
             } finally {
                 setLoading(false);
@@ -502,12 +506,20 @@ const Test = () => {
         loadAssessment();
     }, [initializeSession, resolveProgress, fetchBatch, navigate]);
 
-    // --- UI handlers ---
     const handleAnswer = useCallback((questionId, value) => {
         setDraftAnswers((prev) => ({ ...prev, [questionId]: { value } }));
     }, []);
-    const allAnswered =
-        currentBatch.length > 0 && Object.keys(draftAnswers).length === currentBatch.length;
+    
+    const allAnswered = currentBatch.length > 0 && Object.keys(draftAnswers).length === currentBatch.length;
+    
+    useEffect(() => {
+        if (allAnswered && !submitting && !loadingBatch && currentBatch.length > 0) {
+            const timer = setTimeout(() => {
+                handleBatchComplete();
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [allAnswered, submitting, loadingBatch, currentBatch.length, handleBatchComplete]);
 
     if (loading)
         return (
@@ -532,6 +544,7 @@ const Test = () => {
                 </div>
             </div>
         );
+        
     if (currentBatch.length === 0)
         return (
             <div className="test-page">
@@ -570,14 +583,14 @@ const Test = () => {
                 )}
 
                 <div className="page-indicator-header">
-                    <span>Batch - {currentBatch.length} questions</span>
-                    {allAnswered && <span className="page-complete-badge">✓ Batch complète !</span>}
+                    <span>Questions - {currentBatch.length}</span>
+                    {allAnswered && <span className="page-complete-badge">✓ Complété !</span>}
                 </div>
 
                 {loadingBatch ? (
                     <div className="loading-batch" style={{ textAlign: 'center', padding: '30px' }}>
                         <div className="spinner"></div>
-                        <p>Chargement de la prochaine batch...</p>
+                        <p>Chargement des questions...</p>
                     </div>
                 ) : (
                     <>
@@ -596,59 +609,12 @@ const Test = () => {
                                 className="page-nav-btn next-btn"
                                 onClick={handleBatchComplete}
                                 disabled={!allAnswered || submitting || loadingBatch}
+                                style={{ width: '100%' }}
                             >
-                                {submitting ? 'Envoi...' : 'Soumettre cette batch →'}
+                                {submitting ? 'Envoi...' : allAnswered ? 'Continuer →' : 'Page suivante→'}
                             </button>
                         </div>
                     </>
-                )}
-
-                {showConfirmPhase1 && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <div className="modal-icon">🎉</div>
-                            <h3>Phase 1 terminée !</h3>
-                            <p>Vous avez répondu à toutes les questions de la Phase 1.</p>
-                            <div className="modal-buttons">
-                                <button
-                                    onClick={() => setShowConfirmPhase1(false)}
-                                    className="modal-cancel"
-                                    disabled={loading}
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    onClick={() => setShowConfirmPhase1(false)}
-                                    className="modal-confirm"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Chargement...' : 'Passer à la Phase 2 →'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {showConfirmPhase2Complete && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <div className="modal-icon">🏆</div>
-                            <h3>Félicitations !</h3>
-                            <p>Vous avez terminé toutes les phases du test.</p>
-                            <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
-                                Vos résultats vont maintenant être analysés.
-                            </p>
-                            <div className="modal-buttons">
-                                <button
-                                    onClick={() => setShowConfirmPhase2Complete(false)}
-                                    className="modal-confirm"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Chargement...' : 'Voir mes résultats →'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 )}
             </div>
         </div>
