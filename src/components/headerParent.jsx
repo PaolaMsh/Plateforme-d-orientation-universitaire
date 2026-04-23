@@ -101,10 +101,10 @@ const Header = () => {
                         Bourses et Aides
                     </Link>
                     <Link
-                        to="/support"
-                        className={`nav-link ${location.pathname === '/support' ? 'active' : ''}`}
+                        to="/metiers-porteurs"
+                        className={`nav-link ${location.pathname === '/metiers-porteurs' ? 'active' : ''}`}
                     >
-                        Support
+                        Métiers porteurs
                     </Link>
                 </nav>
 

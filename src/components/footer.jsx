@@ -30,7 +30,7 @@ const Footer = () => {
                             <Link to="/tests-orientations">Tests d'orientation</Link>
                         </li>
                         <li>
-                            <Link to="/metiers-porteurs">Métiers porteurs</Link>
+                            <Link to="/support">Support</Link>
                         </li>
                         
                     </ul>
