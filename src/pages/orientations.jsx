@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/orientations.css';
 
 const IconDoc = () => (
@@ -183,7 +183,143 @@ const IconBarChart = ({ size = 20 }) => (
     </svg>
 );
 
-// Données mockées pour les scores
+const IconPrinter = ({ size = 20 }) => (
+    <svg
+        width={size}
+        height={size}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+    >
+        <path d="M6 9V3h12v6" />
+        <path d="M6 21H4a2 2 0 01-2-2v-6a2 2 0 012-2h16a2 2 0 012 2v6a2 2 0 01-2 2h-2" />
+        <path d="M18 15v6H6v-6" />
+        <rect x="8" y="11" width="8" height="2" />
+    </svg>
+);
+// Au début du composant, après avoir les scores, ajoute :
+
+// Composant d'onglet générique
+function GenericTab({ axisKey, axisLabel, score, recommendations }) {
+    const reco = recommendations?.[axisKey] || {
+        formations: ['Aucune formation disponible'],
+        metiers: ['Aucun métier disponible'],
+        ecoles: ['Aucune école disponible'],
+    };
+
+    // Définitions par axe
+    const definitions = {
+        REALISTIC: {
+            text: "L'axe Réaliste valorise l'action concrète, la manipulation d'outils, les travaux manuels et techniques. Vous préférez les tâches tangibles, pratiques et bien définies.",
+            traits: 'Sens pratique, habileté manuelle, goût pour la technique, autonomie opérationnelle, préférence pour les résultats concrets.',
+        },
+        INVESTIGATIVE: {
+            text: "L'axe Investigateur valorise la curiosité, l'analyse, la résolution de problèmes abstraits. Vous aimez apprendre, observer, expérimenter et comprendre le monde scientifique.",
+            traits: 'Rigueur, esprit critique, goût pour la recherche, autonomie intellectuelle, préférence pour les défis complexes.',
+        },
+        ARTISTIC: {
+            text: "L'axe Artistique valorise la créativité, l'expression personnelle et l'innovation. Vous aimez créer, imaginer et vous exprimer à travers différents médiums.",
+            traits: 'Créativité, sensibilité, originalité, indépendance, préférence pour les environnements non structurés.',
+        },
+        SOCIAL: {
+            text: "L'axe Social valorise l'aide aux autres, l'éducation et le relationnel. Vous aimez collaborer, enseigner et soutenir les personnes.",
+            traits: 'Empathie, patience, sens du service, communication, préférence pour le travail en équipe.',
+        },
+        ENTERPRISING: {
+            text: "L'axe Entreprenant valorise le leadership, la persuasion et la prise de risques. Vous aimez convaincre, diriger et atteindre des objectifs.",
+            traits: 'Leadership, persuasion, ambition, énergie, préférence pour les défis commerciaux.',
+        },
+        CONVENTIONAL: {
+            text: "L'axe Conventionnel valorise l'organisation, la précision et le respect des règles. Vous aimez structurer, classer et suivre des procédures.",
+            traits: 'Organisation, fiabilité, précision, rigueur, préférence pour les tâches administratives.',
+        },
+    };
+
+    const def = definitions[axisKey] || definitions.INVESTIGATIVE;
+
+    return (
+        <>
+            <div className="ria-def-card">
+                <div className="ria-def-title">
+                    <IconInfo /> Définition &amp; caractéristiques
+                </div>
+                <p className="ria-def-text">{def.text}</p>
+                <p className="ria-def-traits">
+                    <strong>Caractéristiques :</strong> {def.traits}
+                </p>
+            </div>
+
+            <div className="ria-interp-card">
+                <div className="ria-interp-title">
+                    <IconSearch size={16} /> Interprétation personnalisée
+                </div>
+                <p className="ria-interp-text">
+                    Votre score ({score}/100) indique une forte affinité avec l'axe {axisLabel}.
+                    Vous vous épanouissez dans les environnements qui valorisent{' '}
+                    {axisLabel === 'Réaliste'
+                        ? "l'action concrète et les résultats tangibles"
+                        : axisLabel === 'Entreprenant'
+                          ? "le leadership et la prise d'initiative"
+                          : axisLabel === 'Investigateur'
+                            ? "l'analyse et la résolution de problèmes"
+                            : axisLabel === 'Artistique'
+                              ? "la créativité et l'expression personnelle"
+                              : axisLabel === 'Social'
+                                ? "l'aide aux autres et la collaboration"
+                                : "l'organisation et la précision"}
+                    .
+                </p>
+            </div>
+
+            <div className="ria-def-card">
+                <div className="ria-reco-title">
+                    <IconGrid /> Formations &amp; métiers recommandés
+                </div>
+                <div className="ria-reco-grid">
+                    <div>
+                        <div className="ria-reco-col-label">Formations</div>
+                        <div className="ria-chip-list">
+                            {reco.formations?.map((f, i) => (
+                                <span key={i} className="ria-chip">
+                                    {f}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="ria-reco-col-label">Métiers</div>
+                        <div className="ria-chip-list">
+                            {reco.metiers?.map((m, i) => (
+                                <span key={i} className={`ria-chip ${i === 0 ? 'active' : ''}`}>
+                                    {m}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {reco.ecoles?.length > 0 && (
+                    <>
+                        <div className="ria-ecoles-title">
+                            <IconHome size={18} /> Écoles / Centres de formation
+                        </div>
+                        <div>
+                            {reco.ecoles?.map((e, i) => (
+                                <div className="ria-ecole-item" key={i}>
+                                    <span className="ria-ecole-dot" />
+                                    {e}
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+        </>
+    );
+}
+
+// Données mockées pour fallback
 const MOCK_SCORES = {
     REALISTIC: 78,
     INVESTIGATIVE: 92,
@@ -193,7 +329,6 @@ const MOCK_SCORES = {
     CONVENTIONAL: 45,
 };
 
-// Données mockées pour les recommandations
 const MOCK_RECOMMENDATIONS = {
     INVESTIGATIVE: {
         formations: [
@@ -227,6 +362,9 @@ const MOCK_RECOMMENDATIONS = {
         ecoles: [],
     },
 };
+
+// Configuration API
+const API_BASE_URL = 'https://api-orientation-production.up.railway.app/api/v1';
 
 /* ─── RADAR CHART ─── */
 function RadarChart({ scores }) {
@@ -480,18 +618,146 @@ function TabRealiste({ scores, recommendations }) {
 /* ─── MAIN COMPONENT ─── */
 export default function Orientations() {
     const navigate = useNavigate();
+    const { assessmentId } = useParams();
     const [activeTab, setActiveTab] = useState('investigative');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [data, setData] = useState({
+        scores: null,
+        recommendations: null,
+        assessmentInfo: null,
+        behavioral: null,
+    });
 
-    // Utiliser les données mockées
-    const scores = MOCK_SCORES;
-    const recommendations = MOCK_RECOMMENDATIONS;
-    const assessmentInfo = {
-        status: 'COMPLETED',
-        completedAt: new Date().toISOString(),
+    // Fonction pour récupérer le rapport complet
+    const fetchCompleteReport = async (id) => {
+    setLoading(true);
+    try {
+        console.log('🔍 Fetching results for assessment:', id);
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('❌ Token manquant');
+            setLoading(false);
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/results/by-assessment/${id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const resultData = await response.json();
+        console.log('📊 Données reçues:', resultData);
+
+        // Mapper les données de l'API
+        const phase2Scores = resultData.phase2Scores || {};
+        const convertScore = (value) => Math.round((value / 20) * 100);
+
+        const scores = {
+            REALISTIC: convertScore(phase2Scores.R || 0),
+            INVESTIGATIVE: convertScore(phase2Scores.I || 0),
+            ARTISTIC: convertScore(phase2Scores.A || 0),
+            SOCIAL: convertScore(phase2Scores.S || 0),
+            ENTERPRISING: convertScore(phase2Scores.E || 0),
+            CONVENTIONAL: convertScore(phase2Scores.C || 0),
+        };
+
+        console.log('🎯 Scores convertis:', scores);
+
+        const axisNames = {
+            I: 'Investigateur', R: 'Réaliste', A: 'Artistique',
+            S: 'Social', E: 'Entreprenant', C: 'Conventionnel',
+        };
+
+        const pointsForts = (resultData.strengths || []).map((s) => ({
+            title: axisNames[s] || s,
+            description: `Vous avez un fort potentiel dans l'axe ${axisNames[s] || s}.`,
+        }));
+
+        const axesAmelioration = (resultData.weaknesses || []).map((w) => ({
+            title: axisNames[w] || w,
+            description: `L'axe ${axisNames[w] || w} est à développer.`,
+        }));
+
+        setData({
+            scores: scores,
+            recommendations: MOCK_RECOMMENDATIONS, // Utilisation des mock pour l'instant
+            assessmentInfo: {
+                status: 'COMPLETED',
+                completedAt: resultData.createdAt || new Date().toISOString(),
+                coherence: resultData.consistencyLevel || 'MOYENNE',
+                code: resultData.phase2Code || 'REA'
+            },
+            behavioral: {
+                pointsForts: pointsForts,
+                axesAmelioration: axesAmelioration,
+            },
+        });
+    } catch (err) {
+        console.error('❌ Erreur fetchCompleteReport:', err);
+        setData({
+            scores: MOCK_SCORES,
+            recommendations: MOCK_RECOMMENDATIONS,
+            assessmentInfo: {
+                status: 'COMPLETED',
+                completedAt: new Date().toISOString(),
+                coherence: 'Élevée',
+                code: 'REA'
+            },
+            behavioral: null,
+        });
+    } finally {
+        setLoading(false);
+    }
+};
+
+    useEffect(() => {
+        const loadData = async () => {
+            console.log('🔍 AssessmentId from URL/Params:', assessmentId);
+
+            if (assessmentId) {
+                await fetchCompleteReport(assessmentId);
+            } else {
+                const storedAssessmentId = localStorage.getItem('assessment_id');
+                console.log('📦 AssessmentId from localStorage:', storedAssessmentId);
+
+                if (storedAssessmentId) {
+                    await fetchCompleteReport(storedAssessmentId);
+                } else {
+                    console.warn('⚠️ Aucun assessmentId trouvé, utilisation des données mockées');
+                    setData({
+                        scores: MOCK_SCORES,
+                        recommendations: MOCK_RECOMMENDATIONS,
+                        assessmentInfo: {
+                            status: 'COMPLETED',
+                            completedAt: new Date().toISOString(),
+                            coherence: 'Élevée',
+                        },
+                        behavioral: null,
+                    });
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadData();
+    }, [assessmentId]);
+
+    // Fonction d'impression
+    const handlePrint = () => {
+        window.print();
     };
 
     // Trouver les scores dominants
     const getDominantScores = () => {
+        const scores = data.scores || MOCK_SCORES;
         if (!scores) return [];
         const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
         return sorted.slice(0, 3);
@@ -500,6 +766,86 @@ export default function Orientations() {
     const dominantScores = getDominantScores();
     const topScoreValue = dominantScores[0]?.[1] || 0;
     const code = dominantScores.map(([key]) => key[0]).join('');
+
+    // Récupérer les observations comportementales
+    const behavioralData = data.behavioral || {
+        pointsForts: [
+            {
+                title: 'Curiosité intellectuelle',
+                description:
+                    'Vous aimez résoudre des problèmes complexes et apprendre par vous-même.',
+            },
+            {
+                title: 'Pragmatisme',
+                description: "Capacité à passer à l'action et à manipuler des outils concrets.",
+            },
+        ],
+        axesAmelioration: [
+            {
+                title: 'Travail collaboratif',
+                description: 'Développer la collaboration en équipe.',
+            },
+        ],
+    };
+
+    // Affichage chargement
+    if (loading) {
+        return (
+            <div className="ria-body">
+                <div className="ria-container">
+                    <div
+                        className="loading-spinner"
+                        style={{ textAlign: 'center', padding: '50px' }}
+                    >
+                        <div className="spinner"></div>
+                        <p>Chargement de votre profil...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const { scores, recommendations, assessmentInfo } = data;
+    const finalScores = scores || MOCK_SCORES;
+    const finalRecommendations = recommendations || MOCK_RECOMMENDATIONS;
+
+    // 🔥 La fonction getTopAxes doit être définie ICI
+    const getTopAxes = () => {
+        if (!finalScores) return [];
+        const axes = [
+            { key: 'REALISTIC', label: 'Réaliste', score: finalScores.REALISTIC, icon: '🔧' },
+            {
+                key: 'INVESTIGATIVE',
+                label: 'Investigateur',
+                score: finalScores.INVESTIGATIVE,
+                icon: '🔬',
+            },
+            { key: 'ARTISTIC', label: 'Artistique', score: finalScores.ARTISTIC, icon: '🎨' },
+            { key: 'SOCIAL', label: 'Social', score: finalScores.SOCIAL, icon: '👥' },
+            {
+                key: 'ENTERPRISING',
+                label: 'Entreprenant',
+                score: finalScores.ENTERPRISING,
+                icon: '💼',
+            },
+            {
+                key: 'CONVENTIONAL',
+                label: 'Conventionnel',
+                score: finalScores.CONVENTIONAL,
+                icon: '📋',
+            },
+        ];
+        return axes.sort((a, b) => b.score - a.score).slice(0, 2);
+    };
+
+    const topAxes = getTopAxes(); // ← ICI c'est correct
+
+    // Initialiser l'onglet actif
+    useEffect(() => {
+        if (topAxes.length > 0 && activeTab === 'investigative') {
+            setActiveTab(topAxes[0].key);
+        }
+    }, [topAxes]);
 
     return (
         <div className="ria-body">
@@ -510,7 +856,7 @@ export default function Orientations() {
                         <IconBarChart />
                     </div>
                     <h1>Explorateur de carrieres &mdash; Axes RIASEC</h1>
-                    <span className="ria-dominant-badge">dominants detectes</span>
+                    <span className="ria-dominant-badge">dominants détectés</span>
                 </div>
 
                 {/* HEADER RAPPORT */}
@@ -519,15 +865,21 @@ export default function Orientations() {
                         <h1>🎯 Mon rapport d'orientation RIASEC</h1>
                         <p className="report-date">
                             Test effectué le{' '}
-                            {new Date().toLocaleDateString('fr-FR', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                            })}
+                            {assessmentInfo?.completedAt
+                                ? new Date(assessmentInfo.completedAt).toLocaleDateString('fr-FR', {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                  })
+                                : new Date().toLocaleDateString('fr-FR', {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                  })}
                         </p>
                         <div className="report-badge">
                             <span className="badge-code">
-                                Code RIASEC: <strong>{code}</strong>
+                                Code RIASEC: <strong>{assessmentInfo?.code || code}</strong>
                             </span>
                             <span className="badge-status">
                                 Statut:{' '}
@@ -565,7 +917,8 @@ export default function Orientations() {
                                 <strong>Statut :</strong> {assessmentInfo?.status || 'COMPLETED'}
                             </li>
                             <li>
-                                <strong>Coherence des reponses :</strong> Élevée
+                                <strong>Coherence des reponses :</strong>{' '}
+                                {assessmentInfo?.coherence || 'Élevée'}
                             </li>
                             <li>
                                 <strong>Axes dominants detectes :</strong>{' '}
@@ -604,38 +957,47 @@ export default function Orientations() {
                             <span className="dot" /> Points forts identifies
                         </div>
 
-                        <div className="ria-obs-item">
-                            <div className="ria-obs-icon-box teal">
-                                <IconSearch size={16} />
+                        {behavioralData.pointsForts?.map((point, index) => (
+                            <div className="ria-obs-item" key={index}>
+                                <div className="ria-obs-icon-box teal">
+                                    {index === 0 ? (
+                                        <IconSearch size={16} />
+                                    ) : (
+                                        <IconWrench size={16} />
+                                    )}
+                                </div>
+                                <div>
+                                    <strong>{point.title} :</strong> {point.description}
+                                </div>
                             </div>
-                            <div>
-                                <strong>Curiosite intellectuelle :</strong> Vous aimez resoudre des
-                                problemes complexes et apprendre par vous-meme.
-                            </div>
-                        </div>
-                        <div className="ria-obs-item">
-                            <div className="ria-obs-icon-box teal">
-                                <IconWrench />
-                            </div>
-                            <div>
-                                <strong>Pragmatisme :</strong> Capacite a passer a l'action et a
-                                manipuler des outils concrets.
-                            </div>
-                        </div>
+                        ))}
 
                         <div className="ria-group-title amber">
                             <span className="dot" /> Axes d'amelioration
                         </div>
 
-                        <div className="ria-obs-item">
-                            <div className="ria-obs-icon-box amber">
-                                <IconUsers />
+                        {behavioralData.axesAmelioration?.length > 0 ? (
+                            behavioralData.axesAmelioration.map((axe, index) => (
+                                <div className="ria-obs-item" key={index}>
+                                    <div className="ria-obs-icon-box amber">
+                                        <IconUsers />
+                                    </div>
+                                    <div>
+                                        <strong>{axe.title} :</strong> {axe.description}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="ria-obs-item">
+                                <div className="ria-obs-icon-box amber">
+                                    <IconUsers />
+                                </div>
+                                <div>
+                                    <strong>À développer :</strong> Tous vos axes sont équilibrés,
+                                    continuez à explorer différents domaines.
+                                </div>
                             </div>
-                            <div>
-                                <strong>Travail collaboratif :</strong> Developper la collaboration
-                                en equipe.
-                            </div>
-                        </div>
+                        )}
 
                         <div className="ria-behavioral-note">
                             <IconInfo />
@@ -653,7 +1015,7 @@ export default function Orientations() {
                         <h2>3. Profil utilisateur &mdash; Hexagramme RIASEC</h2>
                     </div>
                     <div className="ria-card">
-                        <RadarChart scores={scores} />
+                        <RadarChart scores={finalScores} />
 
                         <div className="ria-dominantes-title">Votre carte des dominantes</div>
                         <div className="ria-dominante-tags">
@@ -695,54 +1057,82 @@ export default function Orientations() {
                 </section>
 
                 {/* SECTION 4 : EXPLORATEUR */}
+                {/* SECTION 4 : EXPLORATEUR */}
                 <section className="ria-section">
                     <div className="ria-explorer-header">
                         <span className="ria-explorer-header-icon">
                             <IconSearch />
                         </span>
-                        <h2>Explorateur de carrieres &mdash; Axes RIASEC</h2>
+                        <h2>Explorateur de carrières — Vos axes dominants</h2>
                     </div>
 
                     <div className="ria-tabs">
-                        <button
-                            className={`ria-tab${activeTab === 'investigative' ? ' active' : ''}`}
-                            onClick={() => setActiveTab('investigative')}
-                        >
-                            Investigateur ({scores.INVESTIGATIVE})
-                        </button>
-                        <button
-                            className={`ria-tab${activeTab === 'realistic' ? ' active' : ''}`}
-                            onClick={() => setActiveTab('realistic')}
-                        >
-                            Realiste ({scores.REALISTIC})
-                        </button>
+                        {topAxes.map((axis, index) => (
+                            <button
+                                key={axis.key}
+                                className={`ria-tab${activeTab === axis.key ? ' active' : ''}`}
+                                onClick={() => setActiveTab(axis.key)}
+                            >
+                                {axis.icon} {axis.label} ({axis.score})
+                            </button>
+                        ))}
                     </div>
 
-                    {activeTab === 'investigative' && (
-                        <TabInvestigateur scores={scores} recommendations={recommendations} />
-                    )}
-                    {activeTab === 'realistic' && (
-                        <TabRealiste scores={scores} recommendations={recommendations} />
+                    {topAxes.map(
+                        (axis) =>
+                            activeTab === axis.key && (
+                                <GenericTab
+                                    key={axis.key}
+                                    axisKey={axis.key}
+                                    axisLabel={axis.label}
+                                    score={axis.score}
+                                    recommendations={data.recommendations || {}}
+                                />
+                            ),
                     )}
                 </section>
 
                 {/* BOUTONS DE NAVIGATION */}
                 <div className="Buttons">
-                    <button 
-                        className="button"
-                        onClick={() => navigate('/tests')}
-                    >
+                    <button className="button" onClick={() => navigate('/tests')}>
                         Retour
                     </button>
 
-                    <button 
-                        className="button"
-                        onClick={() => navigate('/universites-formations')}
-                    >
+                    <button className="button" onClick={handlePrint}>
+                        <IconPrinter size={18} />
+                        Imprimer
+                    </button>
+
+                    <button className="button" onClick={() => navigate('/universites-formations')}>
                         Voir les écoles
                     </button>
                 </div>
             </div>
+
+            {/* Styles pour le loading spinner */}
+            <style jsx>{`
+                .loading-spinner {
+                    text-align: center;
+                    padding: 50px;
+                }
+                .spinner {
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #0d9488;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 20px;
+                }
+                @keyframes spin {
+                    0% {
+                        transform: rotate(0deg);
+                    }
+                    100% {
+                        transform: rotate(360deg);
+                    }
+                }
+            `}</style>
         </div>
     );
 }

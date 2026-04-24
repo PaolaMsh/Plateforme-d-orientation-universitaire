@@ -75,10 +75,25 @@ const PHASE2_SECTIONS = [
 
 const BATCH_SIZE = 6;
 
-const Loader = ({ text }) => (
+// Composant Spinner réutilisable
+const Spinner = ({ size = 40, color = '#6246E5' }) => (
+    <div className="spinner-container" style={{ textAlign: 'center', padding: '50px' }}>
+        <div 
+            className="spinner" 
+            style={{ 
+                width: size, 
+                height: size,
+                border: `3px solid ${color}20`,
+                borderTopColor: color,
+            }} 
+        />
+    </div>
+);
+
+// Loader simplifié sans texte
+const Loader = () => (
     <div className="loader" style={{ textAlign: 'center', padding: '50px' }}>
         <div className="spinner"></div>
-        <p style={{ marginTop: '20px' }}>{text}</p>
     </div>
 );
 
@@ -414,44 +429,63 @@ const Test = () => {
         } finally {
             setSubmitting(false);
         }
-    }, [draftAnswers, currentBatch, currentPhase, currentSection, sessionToken, assessmentId, resolveProgress]);
+    }, [
+        draftAnswers,
+        currentBatch,
+        currentPhase,
+        currentSection,
+        sessionToken,
+        assessmentId,
+        resolveProgress,
+    ]);
 
     const handlePreviousBatch = useCallback(async () => {
-        // Pour l'instant, pas de pagination réelle car l'API ne supporte pas skip
-        // On pourrait implémenter un cache des réponses précédentes
         alert('Navigation vers la page précédente non disponible pour le moment');
     }, []);
 
     const handleBatchComplete = useCallback(async () => {
         const progressData = await submitBatch();
         if (!progressData) return;
-        
+
         if (progressData.status === 'COMPLETED') {
             handleAssessmentCompletion();
             return;
         }
-        
+
         const previousPhase = currentPhase;
         const newPhase = progressData.currentPhase;
-        
+
         if (newPhase === 'PHASE1' && previousPhase === 'PHASE1') {
             const success = await fetchBatch('PHASE1', null, sessionToken, assessmentId);
             if (!success) setError('Impossible de charger la prochaine batch');
-        } 
-        else if (newPhase === 'PHASE2' && previousPhase === 'PHASE1') {
+        } else if (newPhase === 'PHASE2' && previousPhase === 'PHASE1') {
             setCurrentPhase('PHASE2');
             setCurrentSection(PHASE2_SECTIONS[0].name);
-            const success = await fetchBatch('PHASE2', PHASE2_SECTIONS[0].name, sessionToken, assessmentId);
+            const success = await fetchBatch(
+                'PHASE2',
+                PHASE2_SECTIONS[0].name,
+                sessionToken,
+                assessmentId,
+            );
             if (!success) setError('Impossible de charger la Phase 2');
-        } 
-        else if (newPhase === 'PHASE2' && previousPhase === 'PHASE2') {
+        } else if (newPhase === 'PHASE2' && previousPhase === 'PHASE2') {
             if (progressData.currentSection !== currentSection) {
                 setPhase2SectionsCompleted((p) => ({ ...p, [currentSection]: true }));
                 setCurrentSection(progressData.currentSection);
-                const success = await fetchBatch('PHASE2', progressData.currentSection, sessionToken, assessmentId);
+                const success = await fetchBatch(
+                    'PHASE2',
+                    progressData.currentSection,
+                    sessionToken,
+                    assessmentId,
+                );
                 if (!success) setError('Impossible de charger la prochaine section');
             } else {
-                const success = await fetchBatch('PHASE2', currentSection, sessionToken, assessmentId);
+                const success = await fetchBatch(
+                    'PHASE2',
+                    currentSection,
+                    sessionToken,
+                    assessmentId,
+                );
                 if (!success) setError('Impossible de charger la prochaine batch');
             }
         }
@@ -459,12 +493,25 @@ const Test = () => {
 
     const handleAssessmentCompletion = useCallback(async () => {
         try {
+            console.log('📤 Envoi des résultats au serveur...');
             await api.post('/results/compute', { sessionToken, assessmentId });
-            navigate('/orientations', { state: { assessmentId, sessionToken } });
+            
+            console.log('✅ Résultats calculés avec succès');
+            console.log('🆔 AssessmentId:', assessmentId);
+            
+            localStorage.setItem('assessment_id', assessmentId);
+            
+            console.log('🔀 Redirection vers /orientations');
+            navigate('/orientations');
+            
         } catch (err) {
-            if (err.response?.status === 400)
-                navigate('/orientations', { state: { assessmentId, sessionToken } });
-            else setError('Impossible de finaliser le test');
+            console.error('❌ Erreur finalisation:', err);
+            if (err.response?.status === 400) {
+                localStorage.setItem('assessment_id', assessmentId);
+                navigate('/orientations');
+            } else {
+                setError('Impossible de finaliser le test');
+            }
         }
     }, [sessionToken, assessmentId, navigate]);
 
@@ -494,8 +541,15 @@ const Test = () => {
                     return;
                 }
                 const phase = progressData.currentPhase || 'PHASE1';
-                const section = progressData.currentSection || (phase === 'PHASE2' ? PHASE2_SECTIONS[0].name : null);
-                await fetchBatch(phase, section, sessionData.sessionToken, sessionData.assessmentId);
+                const section =
+                    progressData.currentSection ||
+                    (phase === 'PHASE2' ? PHASE2_SECTIONS[0].name : null);
+                await fetchBatch(
+                    phase,
+                    section,
+                    sessionData.sessionToken,
+                    sessionData.assessmentId,
+                );
             } catch (err) {
                 console.error('Load assessment error:', err);
                 setError(err.message || "Impossible de charger l'évaluation");
@@ -509,9 +563,10 @@ const Test = () => {
     const handleAnswer = useCallback((questionId, value) => {
         setDraftAnswers((prev) => ({ ...prev, [questionId]: { value } }));
     }, []);
-    
-    const allAnswered = currentBatch.length > 0 && Object.keys(draftAnswers).length === currentBatch.length;
-    
+
+    const allAnswered =
+        currentBatch.length > 0 && Object.keys(draftAnswers).length === currentBatch.length;
+
     useEffect(() => {
         if (allAnswered && !submitting && !loadingBatch && currentBatch.length > 0) {
             const timer = setTimeout(() => {
@@ -521,38 +576,30 @@ const Test = () => {
         }
     }, [allAnswered, submitting, loadingBatch, currentBatch.length, handleBatchComplete]);
 
-    if (loading)
-        return (
-            <div className="test-page">
-                <div className="test-container">
-                    <Loader
-                        text={
-                            currentPhase === 'PHASE1'
-                                ? 'Chargement de la Phase 1...'
-                                : `Chargement de la section ${currentSection}...`
-                        }
-                    />
-                </div>
+    // Remplacer les textes de chargement par des spinners
+    if (loading) return (
+        <div className="test-page">
+            <div className="test-container">
+                <Loader />
             </div>
-        );
+        </div>
+    );
 
-    if (error)
-        return (
-            <div className="test-page">
-                <div className="test-container">
-                    <ErrorView message={error} onRetry={() => window.location.reload()} />
-                </div>
+    if (error) return (
+        <div className="test-page">
+            <div className="test-container">
+                <ErrorView message={error} onRetry={() => window.location.reload()} />
             </div>
-        );
-        
-    if (currentBatch.length === 0)
-        return (
-            <div className="test-page">
-                <div className="test-container">
-                    <EmptyView onReload={() => window.location.reload()} />
-                </div>
+        </div>
+    );
+
+    if (currentBatch.length === 0) return (
+        <div className="test-page">
+            <div className="test-container">
+                <EmptyView onReload={() => window.location.reload()} />
             </div>
-        );
+        </div>
+    );
 
     return (
         <div className="test-page">
@@ -588,10 +635,7 @@ const Test = () => {
                 </div>
 
                 {loadingBatch ? (
-                    <div className="loading-batch" style={{ textAlign: 'center', padding: '30px' }}>
-                        <div className="spinner"></div>
-                        <p>Chargement des questions...</p>
-                    </div>
+                    <Spinner size={30} /> 
                 ) : (
                     <>
                         <div className="questions-grid">
@@ -611,7 +655,11 @@ const Test = () => {
                                 disabled={!allAnswered || submitting || loadingBatch}
                                 style={{ width: '100%' }}
                             >
-                                {submitting ? 'Envoi...' : allAnswered ? 'Continuer →' : 'Page suivante→'}
+                                {submitting
+                                    ? 'Envoi...'
+                                    : allAnswered
+                                      ? 'Continuer →'
+                                      : 'Page suivante→'}
                             </button>
                         </div>
                     </>

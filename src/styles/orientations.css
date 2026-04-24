@@ -82,6 +82,7 @@
     box-shadow: var(--ria-shadow);
     padding: 28px 30px;
     margin-bottom: 20px;
+    margin-top: 2rem;
 }
 
 .ria-header-card {

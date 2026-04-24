@@ -478,6 +478,37 @@
     font-weight: 500;
 }
 
+/* Spinner styles */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(98, 70, 229, 0.2);
+    border-radius: 50%;
+    border-top-color: #6246E5;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

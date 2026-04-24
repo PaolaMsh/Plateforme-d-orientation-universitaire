@@ -827,7 +827,7 @@ const Scholarships = () => {
                             <FontAwesomeIcon icon={faSearch} className="search-icon" />
                             <input
                                 type="text"
-                                placeholder="Rechercher une bourse, un pays, une université, un domaine artistique..."
+                                placeholder="Rechercher une bourse, un pays, une université, un domaine ..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
