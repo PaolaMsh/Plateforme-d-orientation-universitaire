@@ -531,6 +531,8 @@ const Test = () => {
                     sessionData.sessionToken,
                     sessionData.assessmentId,
                 );
+                 /*
+
                 if (progressData.status === 'COMPLETED') {
                     navigate('/orientations', {
                         state: {
@@ -540,6 +542,8 @@ const Test = () => {
                     });
                     return;
                 }
+                 */
+
                 const phase = progressData.currentPhase || 'PHASE1';
                 const section =
                     progressData.currentSection ||
@@ -576,7 +580,6 @@ const Test = () => {
         }
     }, [allAnswered, submitting, loadingBatch, currentBatch.length, handleBatchComplete]);
 
-    // Remplacer les textes de chargement par des spinners
     if (loading) return (
         <div className="test-page">
             <div className="test-container">

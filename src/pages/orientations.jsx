@@ -631,93 +631,96 @@ export default function Orientations() {
 
     // Fonction pour récupérer le rapport complet
     const fetchCompleteReport = async (id) => {
-    setLoading(true);
-    try {
-        console.log('🔍 Fetching results for assessment:', id);
+        setLoading(true);
+        try {
+            console.log('🔍 Fetching results for assessment:', id);
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.error('❌ Token manquant');
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('❌ Token manquant');
+                setError("Token d'authentification manquant");
+                setLoading(false);
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/results/by-assessment/${id}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+
+            const resultData = await response.json();
+            console.log('📊 Données reçues:', resultData);
+
+            const phase2Scores = resultData.phase2Scores || {};
+            const convertScore = (value) => Math.round((value / 20) * 100);
+
+            const scores = {
+                REALISTIC: convertScore(phase2Scores.R || 0),
+                INVESTIGATIVE: convertScore(phase2Scores.I || 0),
+                ARTISTIC: convertScore(phase2Scores.A || 0),
+                SOCIAL: convertScore(phase2Scores.S || 0),
+                ENTERPRISING: convertScore(phase2Scores.E || 0),
+                CONVENTIONAL: convertScore(phase2Scores.C || 0),
+            };
+
+            console.log('🎯 Scores convertis:', scores);
+
+            const axisNames = {
+                I: 'Investigateur', R: 'Réaliste', A: 'Artistique',
+                S: 'Social', E: 'Entreprenant', C: 'Conventionnel',
+            };
+
+            const pointsForts = (resultData.strengths || []).map((s) => ({
+                title: axisNames[s] || s,
+                description: `Vous avez un fort potentiel dans l'axe ${axisNames[s] || s}.`,
+            }));
+
+            const axesAmelioration = (resultData.weaknesses || []).map((w) => ({
+                title: axisNames[w] || w,
+                description: `L'axe ${axisNames[w] || w} est à développer.`,
+            }));
+
+            setData({
+                scores: scores,
+                recommendations: MOCK_RECOMMENDATIONS,
+                assessmentInfo: {
+                    status: 'COMPLETED',
+                    completedAt: resultData.createdAt || new Date().toISOString(),
+                    coherence: resultData.consistencyLevel || 'MOYENNE',
+                    code: resultData.phase2Code || 'REA'
+                },
+                behavioral: {
+                    pointsForts: pointsForts,
+                    axesAmelioration: axesAmelioration,
+                },
+            });
+            setError(null);
+        } catch (err) {
+            console.error('❌ Erreur fetchCompleteReport:', err);
+            setError(err.message || 'Erreur lors du chargement des résultats');
+            setData({
+                scores: MOCK_SCORES,
+                recommendations: MOCK_RECOMMENDATIONS,
+                assessmentInfo: {
+                    status: 'COMPLETED',
+                    completedAt: new Date().toISOString(),
+                    coherence: 'Élevée',
+                    code: 'REA'
+                },
+                behavioral: null,
+            });
+        } finally {
             setLoading(false);
-            return;
         }
+    };
 
-        const response = await fetch(`${API_BASE_URL}/results/by-assessment/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-
-        const resultData = await response.json();
-        console.log('📊 Données reçues:', resultData);
-
-        // Mapper les données de l'API
-        const phase2Scores = resultData.phase2Scores || {};
-        const convertScore = (value) => Math.round((value / 20) * 100);
-
-        const scores = {
-            REALISTIC: convertScore(phase2Scores.R || 0),
-            INVESTIGATIVE: convertScore(phase2Scores.I || 0),
-            ARTISTIC: convertScore(phase2Scores.A || 0),
-            SOCIAL: convertScore(phase2Scores.S || 0),
-            ENTERPRISING: convertScore(phase2Scores.E || 0),
-            CONVENTIONAL: convertScore(phase2Scores.C || 0),
-        };
-
-        console.log('🎯 Scores convertis:', scores);
-
-        const axisNames = {
-            I: 'Investigateur', R: 'Réaliste', A: 'Artistique',
-            S: 'Social', E: 'Entreprenant', C: 'Conventionnel',
-        };
-
-        const pointsForts = (resultData.strengths || []).map((s) => ({
-            title: axisNames[s] || s,
-            description: `Vous avez un fort potentiel dans l'axe ${axisNames[s] || s}.`,
-        }));
-
-        const axesAmelioration = (resultData.weaknesses || []).map((w) => ({
-            title: axisNames[w] || w,
-            description: `L'axe ${axisNames[w] || w} est à développer.`,
-        }));
-
-        setData({
-            scores: scores,
-            recommendations: MOCK_RECOMMENDATIONS, // Utilisation des mock pour l'instant
-            assessmentInfo: {
-                status: 'COMPLETED',
-                completedAt: resultData.createdAt || new Date().toISOString(),
-                coherence: resultData.consistencyLevel || 'MOYENNE',
-                code: resultData.phase2Code || 'REA'
-            },
-            behavioral: {
-                pointsForts: pointsForts,
-                axesAmelioration: axesAmelioration,
-            },
-        });
-    } catch (err) {
-        console.error('❌ Erreur fetchCompleteReport:', err);
-        setData({
-            scores: MOCK_SCORES,
-            recommendations: MOCK_RECOMMENDATIONS,
-            assessmentInfo: {
-                status: 'COMPLETED',
-                completedAt: new Date().toISOString(),
-                coherence: 'Élevée',
-                code: 'REA'
-            },
-            behavioral: null,
-        });
-    } finally {
-        setLoading(false);
-    }
-};
-
+    // ✅ CORRIGÉ : useEffect pour charger les données (reste au même endroit)
     useEffect(() => {
         const loadData = async () => {
             console.log('🔍 AssessmentId from URL/Params:', assessmentId);
@@ -763,17 +766,39 @@ export default function Orientations() {
         return sorted.slice(0, 3);
     };
 
+    // ✅ CORRIGÉ : getTopAxes déplacé AVANT le if (loading)
+    const getTopAxes = () => {
+        const scores = data.scores || MOCK_SCORES;
+        if (!scores) return [];
+        const axes = [
+            { key: 'REALISTIC', label: 'Réaliste', score: scores.REALISTIC, icon: '🔧' },
+            { key: 'INVESTIGATIVE', label: 'Investigateur', score: scores.INVESTIGATIVE, icon: '🔬' },
+            { key: 'ARTISTIC', label: 'Artistique', score: scores.ARTISTIC, icon: '🎨' },
+            { key: 'SOCIAL', label: 'Social', score: scores.SOCIAL, icon: '👥' },
+            { key: 'ENTERPRISING', label: 'Entreprenant', score: scores.ENTERPRISING, icon: '💼' },
+            { key: 'CONVENTIONAL', label: 'Conventionnel', score: scores.CONVENTIONAL, icon: '📋' },
+        ];
+        return axes.sort((a, b) => b.score - a.score).slice(0, 2);
+    };
+
     const dominantScores = getDominantScores();
+    const topAxes = getTopAxes();
     const topScoreValue = dominantScores[0]?.[1] || 0;
     const code = dominantScores.map(([key]) => key[0]).join('');
 
-    // Récupérer les observations comportementales
+    // ✅ CORRIGÉ : useEffect pour initialiser l'onglet actif - DÉPLACÉ ICI (AVANT le if loading)
+    useEffect(() => {
+        if (topAxes.length > 0 && activeTab === 'investigative') {
+            setActiveTab(topAxes[0].key);
+        }
+    }, [topAxes, activeTab]);
+
+    // Récupérer les observations comportementales (peut rester ici car ce n'est pas un hook)
     const behavioralData = data.behavioral || {
         pointsForts: [
             {
                 title: 'Curiosité intellectuelle',
-                description:
-                    'Vous aimez résoudre des problèmes complexes et apprendre par vous-même.',
+                description: 'Vous aimez résoudre des problèmes complexes et apprendre par vous-même.',
             },
             {
                 title: 'Pragmatisme',
@@ -788,17 +813,40 @@ export default function Orientations() {
         ],
     };
 
-    // Affichage chargement
+    // ✅ CORRIGÉ : Affichage chargement (garde les returns conditionnels à la fin)
     if (loading) {
         return (
             <div className="ria-body">
                 <div className="ria-container">
-                    <div
-                        className="loading-spinner"
-                        style={{ textAlign: 'center', padding: '50px' }}
-                    >
+                    <div className="loading-spinner" style={{ textAlign: 'center', padding: '50px' }}>
                         <div className="spinner"></div>
-                        <p>Chargement de votre profil...</p>
+                        <p>Chargement de vos résultats...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Affichage erreur
+    if (error) {
+        return (
+            <div className="ria-body">
+                <div className="ria-container">
+                    <div style={{ textAlign: 'center', padding: '50px' }}>
+                        <p style={{ color: 'red', marginBottom: '20px' }}>Erreur : {error}</p>
+                        <button 
+                            onClick={() => window.location.reload()} 
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#0d9488',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Réessayer
+                        </button>
                     </div>
                 </div>
             </div>
@@ -808,45 +856,6 @@ export default function Orientations() {
     const { scores, recommendations, assessmentInfo } = data;
     const finalScores = scores || MOCK_SCORES;
     const finalRecommendations = recommendations || MOCK_RECOMMENDATIONS;
-
-    // 🔥 La fonction getTopAxes doit être définie ICI
-    const getTopAxes = () => {
-        if (!finalScores) return [];
-        const axes = [
-            { key: 'REALISTIC', label: 'Réaliste', score: finalScores.REALISTIC, icon: '🔧' },
-            {
-                key: 'INVESTIGATIVE',
-                label: 'Investigateur',
-                score: finalScores.INVESTIGATIVE,
-                icon: '🔬',
-            },
-            { key: 'ARTISTIC', label: 'Artistique', score: finalScores.ARTISTIC, icon: '🎨' },
-            { key: 'SOCIAL', label: 'Social', score: finalScores.SOCIAL, icon: '👥' },
-            {
-                key: 'ENTERPRISING',
-                label: 'Entreprenant',
-                score: finalScores.ENTERPRISING,
-                icon: '💼',
-            },
-            {
-                key: 'CONVENTIONAL',
-                label: 'Conventionnel',
-                score: finalScores.CONVENTIONAL,
-                icon: '📋',
-            },
-        ];
-        return axes.sort((a, b) => b.score - a.score).slice(0, 2);
-    };
-
-    const topAxes = getTopAxes(); // ← ICI c'est correct
-
-    // Initialiser l'onglet actif
-    useEffect(() => {
-        if (topAxes.length > 0 && activeTab === 'investigative') {
-            setActiveTab(topAxes[0].key);
-        }
-    }, [topAxes]);
-
     return (
         <div className="ria-body">
             <div className="ria-container">
@@ -1099,7 +1108,6 @@ export default function Orientations() {
                     </button>
 
                     <button className="button" onClick={handlePrint}>
-                        <IconPrinter size={18} />
                         Imprimer
                     </button>
 
