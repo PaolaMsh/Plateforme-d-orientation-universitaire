@@ -72,13 +72,13 @@ export const treasureMapService = {
                 treasureMapData = await treasureMapService.getTreasureMapByToken(
                     assessment.sessionToken,
                 );
-            } catch (error) {
-                console.log('ℹ️ Pas de carte existante, on va en générer une');
+            } catch {
+                console.log('ℹ️ Pas de carte existante, le serveur va préparer le rapport');
             }
 
-            // 2. Si pas de carte, en générer une
+            // 2. Si pas de carte, demander au backend de préparer le rapport
             if (!treasureMapData) {
-                if (onProgress) onProgress('Génération de la carte...', 30);
+                if (onProgress) onProgress('Préparation du rapport côté serveur...', 30);
                 treasureMapData = await treasureMapService.generateTreasureMap(
                     assessment.sessionToken,
                     assessment.assessmentId,
@@ -117,7 +117,7 @@ export const treasureMapService = {
         try {
             const result = await treasureMapService.downloadReportPdf(assessment, onProgress);
 
-            // Créer un lien de téléchargement
+            // Le PDF est fourni par le backend. Le front ne fait que déclencher le téléchargement.
             const url = window.URL.createObjectURL(result.blob);
             const link = document.createElement('a');
             link.href = url;
@@ -129,10 +129,8 @@ export const treasureMapService = {
             link.click();
             document.body.removeChild(link);
 
-            // Nettoyer après un délai
             setTimeout(() => {
                 window.URL.revokeObjectURL(url);
-                document.body.removeChild(link);
             }, 100);
 
             if (onProgress) onProgress('Téléchargement terminé', 100);
