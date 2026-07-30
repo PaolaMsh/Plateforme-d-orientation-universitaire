@@ -78,9 +78,9 @@ const UniversitiesPage = () => {
 
     const handleImageError = (id) => {
         console.log(`Erreur de chargement pour l'image ${id}`);
-        setImageErrors(prev => ({
+        setImageErrors((prev) => ({
             ...prev,
-            [id]: true
+            [id]: true,
         }));
     };
 
@@ -137,10 +137,10 @@ const UniversitiesPage = () => {
                     {visibleUniversities.map((uni) => (
                         <div key={uni.id} className="uni-card">
                             <div className="uni-image">
-                                <img 
+                                <img
                                     src={
-                                        imageErrors[uni.id] 
-                                            ? '/images/default-university.jpg' 
+                                        imageErrors[uni.id]
+                                            ? '/images/default-university.jpg'
                                             : uni.coverUrl || '/images/default-university.jpg'
                                     }
                                     alt={uni.name}

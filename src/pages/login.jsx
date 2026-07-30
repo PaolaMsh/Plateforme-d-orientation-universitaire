@@ -27,12 +27,14 @@ const LoginPage = () => {
     const getLoginErrorMessage = (err) => {
         // Utiliser le message personnalisé de l'intercepteur
         if (err.userMessage) return err.userMessage;
-        
+
         const status = err.response?.status;
         const backendMessage = err.response?.data?.message;
 
         if (status === 403) {
-            return backendMessage || 'Compte inactif. Vérifiez votre email avant de vous connecter.';
+            return (
+                backendMessage || 'Compte inactif. Vérifiez votre email avant de vous connecter.'
+            );
         }
         if (status === 401) {
             return backendMessage || 'Email ou mot de passe incorrect';

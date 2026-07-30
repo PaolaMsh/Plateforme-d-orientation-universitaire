@@ -11,7 +11,7 @@ export const treasureMapService = {
             const response = await api.post('/treasure-map', {
                 sessionToken,
                 assessmentId,
-                generatePdf: true
+                generatePdf: true,
             });
             console.log('✅ Treasure map générée:', response.data);
             return response.data;
@@ -48,8 +48,8 @@ export const treasureMapService = {
             const response = await api.get(`/treasure-map/pdf/${shareToken}`, {
                 responseType: 'blob',
                 headers: {
-                    'Accept': 'application/pdf'
-                }
+                    Accept: 'application/pdf',
+                },
             });
             console.log('✅ PDF récupéré:', response.data);
             return response.data;
@@ -69,17 +69,19 @@ export const treasureMapService = {
             // 1. Vérifier si une treasure map existe déjà
             let treasureMapData = null;
             try {
-                treasureMapData = await treasureMapService.getTreasureMapByToken(assessment.sessionToken);
+                treasureMapData = await treasureMapService.getTreasureMapByToken(
+                    assessment.sessionToken,
+                );
             } catch (error) {
                 console.log('ℹ️ Pas de carte existante, on va en générer une');
             }
-            
+
             // 2. Si pas de carte, en générer une
             if (!treasureMapData) {
                 if (onProgress) onProgress('Génération de la carte...', 30);
                 treasureMapData = await treasureMapService.generateTreasureMap(
                     assessment.sessionToken,
-                    assessment.assessmentId
+                    assessment.assessmentId,
                 );
             } else {
                 if (onProgress) onProgress('Carte récupérée', 40);
@@ -88,14 +90,16 @@ export const treasureMapService = {
             // 3. Récupérer le PDF
             if (treasureMapData.shareToken) {
                 if (onProgress) onProgress('Téléchargement du PDF...', 60);
-                const pdfBlob = await treasureMapService.getTreasureMapPdf(treasureMapData.shareToken);
-                
+                const pdfBlob = await treasureMapService.getTreasureMapPdf(
+                    treasureMapData.shareToken,
+                );
+
                 if (onProgress) onProgress('PDF prêt', 90);
-                
+
                 return {
                     blob: pdfBlob,
                     shareToken: treasureMapData.shareToken,
-                    data: treasureMapData
+                    data: treasureMapData,
                 };
             } else {
                 throw new Error('Aucun shareToken disponible');
@@ -112,33 +116,33 @@ export const treasureMapService = {
     downloadAndSavePdf: async (assessment, fileName = null, onProgress = null) => {
         try {
             const result = await treasureMapService.downloadReportPdf(assessment, onProgress);
-            
+
             // Créer un lien de téléchargement
             const url = window.URL.createObjectURL(result.blob);
             const link = document.createElement('a');
             link.href = url;
-            
+
             const defaultName = `Rapport_${assessment.type || 'RIASEC'}_${assessment.assessmentId}.pdf`;
             link.download = fileName || defaultName;
-            
+
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             // Nettoyer après un délai
             setTimeout(() => {
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(link);
             }, 100);
-            
+
             if (onProgress) onProgress('Téléchargement terminé', 100);
-            
+
             return result;
         } catch (error) {
             console.error('❌ Erreur sauvegarde PDF:', error);
             throw error;
         }
-    }
+    },
 };
 
 export default treasureMapService;

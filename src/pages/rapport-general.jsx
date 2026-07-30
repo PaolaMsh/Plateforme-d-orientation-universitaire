@@ -77,67 +77,69 @@ function RapportGeneral() {
         ecoles: [],
     });
 
-const fetchRecommendations = async (id, riasecCode) => {
-    try {
-        const code = riasecCode || getRiasecCode(rapportData) || 'IND';
-        const leadingLetter = String(code).charAt(0).toUpperCase();
+    const fetchRecommendations = async (id, riasecCode) => {
+        try {
+            const code = riasecCode || getRiasecCode(rapportData) || 'IND';
+            const leadingLetter = String(code).charAt(0).toUpperCase();
 
-        console.log('📊 Code RIASEC:', code);
-        console.log('📊 Première lettre (axe dominant):', leadingLetter);
+            console.log('📊 Code RIASEC:', code);
+            console.log('📊 Première lettre (axe dominant):', leadingLetter);
 
-        // ✅ UTILISER LA NOUVELLE MÉTHODE AVEC PRIORITÉ BASE DE DONNÉES
-        const recoData = await recommendationService.getRiasecRecommendationsWithDB(id, leadingLetter);
-        console.log('📊 Recommandations reçues:', recoData);
+            // ✅ UTILISER LA NOUVELLE MÉTHODE AVEC PRIORITÉ BASE DE DONNÉES
+            const recoData = await recommendationService.getRiasecRecommendationsWithDB(
+                id,
+                leadingLetter,
+            );
+            console.log('📊 Recommandations reçues:', recoData);
 
-        // Mapping des axes
-        const axisMapping = {
-            R: 'REALISTIC',
-            I: 'INVESTIGATIVE',
-            A: 'ARTISTIC',
-            S: 'SOCIAL',
-            E: 'ENTERPRISING',
-            C: 'CONVENTIONAL',
-        };
-        const dominantAxis = axisMapping[leadingLetter] || 'INVESTIGATIVE';
+            // Mapping des axes
+            const axisMapping = {
+                R: 'REALISTIC',
+                I: 'INVESTIGATIVE',
+                A: 'ARTISTIC',
+                S: 'SOCIAL',
+                E: 'ENTERPRISING',
+                C: 'CONVENTIONAL',
+            };
+            const dominantAxis = axisMapping[leadingLetter] || 'INVESTIGATIVE';
 
-        // Vérifier que l'axe existe
-        const axisRecos = recoData.recommendationsByAxis?.[dominantAxis] || {
-            formations: ['Information non disponible'],
-            metiers: ['Information non disponible'],
-            ecoles: ['Information non disponible'],
-        };
-
-        setRecommendations({
-            formations: axisRecos.formations || ['Aucune formation disponible'],
-            metiers: axisRecos.metiers || ['Aucun métier disponible'],
-            ecoles: axisRecos.ecoles || ['Aucune école disponible'],
-        });
-        
-    } catch (err) {
-        console.error('❌ Erreur chargement recommandations:', err);
-        
-        // ✅ AFFICHER UN MESSAGE CLAIR
-        if (err.response?.status === 401) {
-            setRecommendations({
-                formations: ['🔒 Veuillez vous reconnecter'],
-                metiers: ['🔒 Veuillez vous reconnecter'],
-                ecoles: ['🔒 Veuillez vous reconnecter'],
-            });
-        } else if (err.response?.status === 429) {
-            setRecommendations({
-                formations: ['⏳ Trop de requêtes - Réessayez plus tard'],
-                metiers: ['⏳ Trop de requêtes - Réessayez plus tard'],
-                ecoles: ['⏳ Trop de requêtes - Réessayez plus tard'],
-            });
-        } else {
-            setRecommendations({
+            // Vérifier que l'axe existe
+            const axisRecos = recoData.recommendationsByAxis?.[dominantAxis] || {
                 formations: ['Information non disponible'],
                 metiers: ['Information non disponible'],
                 ecoles: ['Information non disponible'],
+            };
+
+            setRecommendations({
+                formations: axisRecos.formations || ['Aucune formation disponible'],
+                metiers: axisRecos.metiers || ['Aucun métier disponible'],
+                ecoles: axisRecos.ecoles || ['Aucune école disponible'],
             });
+        } catch (err) {
+            console.error('❌ Erreur chargement recommandations:', err);
+
+            // ✅ AFFICHER UN MESSAGE CLAIR
+            if (err.response?.status === 401) {
+                setRecommendations({
+                    formations: ['🔒 Veuillez vous reconnecter'],
+                    metiers: ['🔒 Veuillez vous reconnecter'],
+                    ecoles: ['🔒 Veuillez vous reconnecter'],
+                });
+            } else if (err.response?.status === 429) {
+                setRecommendations({
+                    formations: ['⏳ Trop de requêtes - Réessayez plus tard'],
+                    metiers: ['⏳ Trop de requêtes - Réessayez plus tard'],
+                    ecoles: ['⏳ Trop de requêtes - Réessayez plus tard'],
+                });
+            } else {
+                setRecommendations({
+                    formations: ['Information non disponible'],
+                    metiers: ['Information non disponible'],
+                    ecoles: ['Information non disponible'],
+                });
+            }
         }
-    }
-};
+    };
 
     // ============ CHARGEMENT DES DONNÉES ============
     useEffect(() => {
@@ -194,7 +196,6 @@ const fetchRecommendations = async (id, riasecCode) => {
         fetchRapport();
     }, [location.state]);
 
-    
     // ✅ Nouveau test (avec nettoyage complet)
     const handleNewTest = () => {
         // Supprimer toutes les données temporaires du test général.
@@ -327,7 +328,7 @@ const fetchRecommendations = async (id, riasecCode) => {
                     <div className="ori-header-content">
                         <div className="ori-logo-section">
                             <h1 className="orientations-header" style={{ marginTop: '7rem' }}>
-                                 Votre rapport général
+                                Votre rapport général
                             </h1>
                         </div>
                     </div>

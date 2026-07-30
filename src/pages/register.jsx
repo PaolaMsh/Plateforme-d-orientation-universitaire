@@ -92,7 +92,7 @@ const RegisterPage = () => {
                     state: {
                         message:
                             response.data?.message ||
-                            "Inscription réussie. Vérifiez votre email pour activer votre compte.",
+                            'Inscription réussie. Vérifiez votre email pour activer votre compte.',
                     },
                 });
             }, 2200);

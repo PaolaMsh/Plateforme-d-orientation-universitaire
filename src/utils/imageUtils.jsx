@@ -1,6 +1,7 @@
 // src/utils/imageUtils.js
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://api-orientation-production.up.railway.app/api/v1';
+const API_URL =
+    import.meta.env.VITE_API_URL || 'https://api-orientation-production.up.railway.app/api/v1';
 
 /**
  * Nettoie et construit l'URL complète d'une image

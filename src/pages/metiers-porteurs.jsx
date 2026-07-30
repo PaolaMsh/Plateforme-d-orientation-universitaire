@@ -387,7 +387,7 @@ const MetiersPorteurs = () => {
     };
 
     const getDemandBadgeStyle = (demand) => {
-        switch(demand) {
+        switch (demand) {
             case 'très-elevee':
                 return { background: '#e76f51', color: 'white' };
             case 'elevee':
@@ -459,7 +459,7 @@ const MetiersPorteurs = () => {
                                     <div className="card-icon">{job.icon}</div>
                                     <div className="card-title-section">
                                         <h3 className="job-title">{job.title}</h3>
-                                        <span 
+                                        <span
                                             className="demand-badge"
                                             style={getDemandBadgeStyle(job.demand)}
                                         >
@@ -515,9 +515,7 @@ const MetiersPorteurs = () => {
 
             <section className="formation-section">
                 <div className="formation-container">
-                    <h2 className="formation-title">
-                        Comment se former ?
-                    </h2>
+                    <h2 className="formation-title">Comment se former ?</h2>
                     <div className="formation-grid">
                         <div className="formation-card">
                             <div className="formation-icon">

@@ -36,7 +36,7 @@ export const bourseService = {
     getSpecificSavedScholarship: async (scholarshipId) => {
         try {
             const response = await api.get('/users/me/scholarship', {
-                params: { scholarshipId }
+                params: { scholarshipId },
             });
             console.log('✅ Bourse spécifique récupérée:', response.data);
             return response.data;
@@ -52,22 +52,24 @@ export const bourseService = {
             if (!localSaved) {
                 return [];
             }
-            
+
             const savedIds = JSON.parse(localSaved);
             if (savedIds.length === 0) {
                 return [];
             }
-            
-            console.log(`📚 Récupération de ${savedIds.length} bourses depuis la base de données...`);
-            
+
+            console.log(
+                `📚 Récupération de ${savedIds.length} bourses depuis la base de données...`,
+            );
+
             const scholarships = [];
             const errors = [];
-            
+
             for (const item of savedIds) {
                 try {
                     const scholarshipId = item.id || item;
                     const response = await bourseService.getSpecificSavedScholarship(scholarshipId);
-                    
+
                     if (response && response.data) {
                         const apiData = response.data;
                         scholarships.push({
@@ -83,7 +85,7 @@ export const bourseService = {
                             emoji: apiData.emoji || item.emoji || '🎓',
                             savedAt: item.savedAt || new Date().toISOString(),
                             ...item,
-                            ...(apiData.data || apiData)
+                            ...(apiData.data || apiData),
                         });
                     } else {
                         scholarships.push(item);
@@ -94,11 +96,11 @@ export const bourseService = {
                     scholarships.push(item);
                 }
             }
-            
+
             console.log(`✅ ${scholarships.length} bourses récupérées (${errors.length} erreurs)`);
-            
+
             localStorage.setItem('savedScholarships', JSON.stringify(scholarships));
-            
+
             return scholarships;
         } catch (error) {
             console.error('❌ Erreur récupération toutes les bourses:', error);
@@ -116,7 +118,7 @@ export const bourseService = {
                 return false;
             }
             const saved = bourseService.getSavedScholarships();
-            return saved.some(s => s.id === scholarshipId);
+            return saved.some((s) => s.id === scholarshipId);
         }
     },
 
@@ -131,5 +133,5 @@ export const bourseService = {
             console.error('❌ Erreur chargement bourses locales:', error);
             return [];
         }
-    }
+    },
 };

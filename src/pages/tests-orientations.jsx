@@ -259,10 +259,34 @@ const IconClock = () => (
 );
 
 const testOptions = [
-    { id: 'GENERALE', name: 'Général', icon: <IconSeedling />, desc: 'Premiers intérêts professionnels', to: '/test-general' },
-    { id: 'OCCUPATIONS', name: 'Occupations', icon: <IconTarget />, desc: 'Préférences d’activités', to: '/tests' },
-    { id: 'APTITUDES', name: 'Aptitudes', icon: <IconBulb />, desc: 'Compétences et aptitudes', to: '/tests' },
-    { id: 'PERSONALITY', name: 'Personnalité', icon: <IconBrain />, desc: 'Traits comportementaux', to: '/tests' },
+    {
+        id: 'GENERALE',
+        name: 'Général',
+        icon: <IconSeedling />,
+        desc: 'Premiers intérêts professionnels',
+        to: '/test-general',
+    },
+    {
+        id: 'OCCUPATIONS',
+        name: 'Occupations',
+        icon: <IconTarget />,
+        desc: 'Préférences d’activités',
+        to: '/tests',
+    },
+    {
+        id: 'APTITUDES',
+        name: 'Aptitudes',
+        icon: <IconBulb />,
+        desc: 'Compétences et aptitudes',
+        to: '/tests',
+    },
+    {
+        id: 'PERSONALITY',
+        name: 'Personnalité',
+        icon: <IconBrain />,
+        desc: 'Traits comportementaux',
+        to: '/tests',
+    },
 ];
 
 const steps = [
@@ -360,8 +384,8 @@ const Testsorientations = () => {
 
                         <h2 className="to-card-title">Test complet</h2>
                         <p className="to-card-desc">
-                            Enchaînez les 4 tests en une seule session pour obtenir un profil
-                            RIASEC complet et des recommandations précises.
+                            Enchaînez les 4 tests en une seule session pour obtenir un profil RIASEC
+                            complet et des recommandations précises.
                         </p>
                         <ul className="to-card-features">
                             <li>
@@ -397,7 +421,11 @@ const Testsorientations = () => {
                                 <Link
                                     key={option.id}
                                     to={option.to}
-                                    state={option.id === 'GENERALE' ? undefined : { mode: 'single', testType: option.id }}
+                                    state={
+                                        option.id === 'GENERALE'
+                                            ? undefined
+                                            : { mode: 'single', testType: option.id }
+                                    }
                                     className="to-test-btn"
                                 >
                                     <span className="to-test-icon">{option.icon}</span>

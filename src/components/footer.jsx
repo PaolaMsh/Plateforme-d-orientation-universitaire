@@ -59,7 +59,6 @@ const Footer = () => {
                         <li>
                             <Link to="/universites-formations">Universités du Bénin</Link>
                         </li>
-                        
                     </ul>
                 </div>
 

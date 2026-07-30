@@ -108,24 +108,28 @@ const CATEGORY = [
         label: 'Général',
         icon: SectionSvgs.realist,
         description: 'Première évaluation de vos intérêts professionnels',
+        help: 'Imaginez-vous en train de faire chaque activité. Choisissez votre réponse selon ce qui vous attire naturellement, même si vous ne l’avez jamais essayé.',
     },
     {
         name: 'OCCUPATIONS',
         label: 'Occupations',
         icon: SectionSvgs.realist,
         description: 'Préférences pour les activités professionnelles',
+        help: 'Imaginez-vous exercer chaque métier au quotidien. Répondez selon l’envie que ce métier pourrait vous donner, sans penser à vos études ou à votre expérience actuelle.',
     },
     {
         name: 'APTITUDES',
         label: 'Aptitudes',
         icon: SectionSvgs.investigator,
         description: 'Compétences et niveaux de maîtrise',
+        help: 'Évaluez votre niveau actuel, et non votre potentiel. Pour chaque aptitude, choisissez : Faible, Moyen ou Fort.',
     },
     {
         name: 'PERSONALITY',
         label: 'Personnalité',
         icon: SectionSvgs.artistic,
         description: 'Traits comportementaux et préférences',
+        help: 'Pensez à votre manière habituelle d’être et d’agir. Indiquez si chaque affirmation vous correspond réellement, même si vous aimeriez parfois être différent.',
     },
 ];
 
@@ -217,7 +221,7 @@ const ProgressHeader = ({ currentCategory, completionPercentage, draftCount, bat
             </div>
             <div className="progress-section">
                 <div className="category-indicator">
-                    <span className="category-name">{currentCategory}</span>
+                    <span className="category-name">{section.label}</span>&nbsp;
                     <span className="category-desc">
                         {section?.description || 'Évaluation approfondie'}
                     </span>
@@ -401,26 +405,32 @@ const Test = () => {
         }
     }, [initialTestType, selectedCategories]);
 
-    const resolveProgress = useCallback(async (token, assessmentIdParam) => {
-        try {
-            if (!token || token === 'null')
+    const resolveProgress = useCallback(
+        async (token, assessmentIdParam) => {
+            try {
+                if (!token || token === 'null')
+                    return {
+                        status: 'IN_PROGRESS',
+                        currentCategory: selectedCategories[0],
+                    };
+                const progressResponse = await api.get(
+                    `/assessments/${assessmentIdParam}/progress`,
+                    {
+                        params: { sessionToken: token },
+                    },
+                );
+                const progressData = progressResponse.data;
+                setCompletionPercentage(progressData.completionPercentage || 0);
+                return progressData;
+            } catch {
                 return {
                     status: 'IN_PROGRESS',
                     currentCategory: selectedCategories[0],
                 };
-            const progressResponse = await api.get(`/assessments/${assessmentIdParam}/progress`, {
-                params: { sessionToken: token },
-            });
-            const progressData = progressResponse.data;
-            setCompletionPercentage(progressData.completionPercentage || 0);
-            return progressData;
-        } catch {
-            return {
-                status: 'IN_PROGRESS',
-                currentCategory: selectedCategories[0],
-            };
-        }
-    }, [selectedCategories]);
+            }
+        },
+        [selectedCategories],
+    );
 
     const fetchBatch = useCallback(
         async (category, tokenParam = null, assessmentIdParam = null, options = {}) => {
@@ -500,14 +510,7 @@ const Test = () => {
         } finally {
             setSubmitting(false);
         }
-    }, [
-        draftAnswers,
-        currentBatch,
-        currentCategory,
-        sessionToken,
-        assessmentId,
-        resolveProgress,
-    ]);
+    }, [draftAnswers, currentBatch, currentCategory, sessionToken, assessmentId, resolveProgress]);
 
     const handlePreviousBatch = useCallback(async () => {
         if (batchHistory.length === 0) {
@@ -596,9 +599,14 @@ const Test = () => {
             return;
         }
 
-        const sameCategoryHasQuestions = await fetchBatch(currentCategory, sessionToken, assessmentId, {
-            allowEmpty: true,
-        });
+        const sameCategoryHasQuestions = await fetchBatch(
+            currentCategory,
+            sessionToken,
+            assessmentId,
+            {
+                allowEmpty: true,
+            },
+        );
         if (sameCategoryHasQuestions) return;
 
         setCompletedCategories((prev) => ({ ...prev, [currentCategory]: true }));
@@ -676,13 +684,7 @@ const Test = () => {
             }
         };
         loadAssessment();
-    }, [
-        initializeSession,
-        resolveProgress,
-        fetchBatch,
-        selectedCategories,
-        initialTestType,
-    ]);
+    }, [initializeSession, resolveProgress, fetchBatch, selectedCategories, initialTestType]);
 
     const handleAnswer = useCallback((questionId, value) => {
         setDraftAnswers((prev) => ({ ...prev, [questionId]: { value } }));
@@ -751,20 +753,29 @@ const Test = () => {
                 />
 
                 <div className="category-sections-indicator">
-                    {CATEGORY.filter((section) => selectedCategories.includes(section.name)).map((section) => (
-                        <div
-                            key={section.name}
-                            className={`section-badge ${section.name === currentCategory ? 'active' : ''} ${completedCategories[section.name] ? 'completed' : ''}`}
-                        >
-                            <div className="sec">
-                                <span className="section-icon">{section.icon}</span>
-                                <span className="section-name">{section.label}</span>
-                                {completedCategories[section.name] && (
-                                    <span className="section-check">✓</span>
-                                )}
+                    {CATEGORY.filter((section) => selectedCategories.includes(section.name)).map(
+                        (section) => (
+                            <div
+                                key={section.name}
+                                className={`section-badge ${
+                                    section.name === currentCategory ? 'active' : ''
+                                } ${completedCategories[section.name] ? 'completed' : ''}`}
+                            >
+                                <div className="sec">
+                                    <span className="section-icon">{section.icon}</span>
+
+                                    <span className="section-name">{section.label}</span>
+
+                                    {completedCategories[section.name] && (
+                                        <span className="section-check">✓</span>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ),
+                    )}
+                    <div className="section-help">
+                        {CATEGORY.find((section) => section.name === currentCategory)?.help}
+                    </div>
                 </div>
 
                 {loadingBatch ? (

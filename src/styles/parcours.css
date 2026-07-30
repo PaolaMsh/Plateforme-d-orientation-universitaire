@@ -236,7 +236,6 @@
     font-size: 14px;
 }
 
-
 .action-card span:first-child {
     font-size: 24px;
     display: block;
@@ -380,7 +379,7 @@
     color: #6b7280;
 }
 
-.btn-view{
+.btn-view {
     background: none;
     border: none;
     color: var(--primary-color);
@@ -605,7 +604,7 @@
 .btn-remove {
     background: none;
     color: #ef4444;
-    border: none; 
+    border: none;
 }
 .btn-remove:hover {
     color: #dc2626;
@@ -782,7 +781,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .reco-empty {
@@ -798,7 +799,8 @@
     margin-bottom: 12px;
 }
 
-.load-reco-btn, .retry-reco-btn {
+.load-reco-btn,
+.retry-reco-btn {
     background: #3347df;
     color: white;
     border: none;
@@ -809,7 +811,8 @@
     transition: background 0.2s;
 }
 
-.load-reco-btn:hover, .retry-reco-btn:hover {
+.load-reco-btn:hover,
+.retry-reco-btn:hover {
     background: #1e3a8a;
 }
 
@@ -884,7 +887,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .reco-empty {

@@ -18,7 +18,7 @@ api.interceptors.request.use(
     (config) => {
         console.log(`🚀 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
         console.log('📦 Données:', config.data);
-        
+
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -27,7 +27,7 @@ api.interceptors.request.use(
     },
     (error) => {
         return Promise.reject(error);
-    }
+    },
 );
 
 // Intercepteur pour gérer les erreurs
@@ -38,19 +38,19 @@ api.interceptors.response.use(
     },
     async (error) => {
         console.error('❌ Erreur API:', error.message);
-        
+
         if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
-            console.error('⚠️ Le serveur backend n\'est pas accessible.');
+            console.error("⚠️ Le serveur backend n'est pas accessible.");
             console.error('🔗 URL utilisée:', API_URL);
         }
-        
+
         const originalRequest = error.config;
 
         if (
             error.response?.status === 401 &&
             !originalRequest._retry &&
             (error.response?.data?.message?.includes('expired') ||
-            error.response?.data?.message?.includes('Invalid token'))
+                error.response?.data?.message?.includes('Invalid token'))
         ) {
             originalRequest._retry = true;
 
@@ -83,7 +83,7 @@ api.interceptors.response.use(
         }
 
         return Promise.reject(error);
-    }
+    },
 );
 
 export default api;

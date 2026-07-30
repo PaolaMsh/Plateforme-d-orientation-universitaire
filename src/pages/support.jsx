@@ -58,7 +58,7 @@ const Support = () => {
         },
         {
             question: "Comment se déroule le test d'orientation ?",
-            answer: "Le test est organisé par catégories RIASEC : occupations, aptitudes et personnalité. Vous pouvez passer le parcours complet ou un test ciblé selon votre besoin. Il dure généralement 15-20 minutes.",
+            answer: 'Le test est organisé par catégories RIASEC : occupations, aptitudes et personnalité. Vous pouvez passer le parcours complet ou un test ciblé selon votre besoin. Il dure généralement 15-20 minutes.',
         },
         {
             question: 'Mes données sont-elles sécurisées ?',

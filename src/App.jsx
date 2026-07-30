@@ -22,14 +22,20 @@ import Guide from './pages/guide-riasec';
 import Faq from './pages/faq';
 import RapportGeneral from './pages/rapport-general';
 import VerifyEmailGuard from './components/VerifyEmailGuard';
-    
+
 const ProtectedRoute = ({ children }) => {
     const { token } = useAuth();
     const location = useLocation();
     const isAuth = !!token;
 
     if (!isAuth) {
-        return <Navigate to="/auth/login" state={{ from: location.pathname + location.search }} replace />;
+        return (
+            <Navigate
+                to="/auth/login"
+                state={{ from: location.pathname + location.search }}
+                replace
+            />
+        );
     }
 
     return children;
@@ -52,7 +58,6 @@ function App() {
                     <Route path="/universites-formations" element={<UniversitiesPage />} />
 
                     <Route
-
                         path="/metiers-porteurs"
                         element={
                             <ProtectedRoute>
@@ -87,7 +92,6 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
-                    
 
                     <Route
                         path="/test-general"
@@ -157,8 +161,6 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
-
-                    
                 </Routes>
                 <Footer />
             </Router>

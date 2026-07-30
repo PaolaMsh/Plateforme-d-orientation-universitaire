@@ -55,7 +55,13 @@ export function getNormalizedScores(result) {
 }
 
 export function getDominantAxisFromCode(code) {
-    return RIASEC_AXIS_KEYS[String(code || '').charAt(0).toUpperCase()] || 'INVESTIGATIVE';
+    return (
+        RIASEC_AXIS_KEYS[
+            String(code || '')
+                .charAt(0)
+                .toUpperCase()
+        ] || 'INVESTIGATIVE'
+    );
 }
 
 export function getCategoryLabel(category) {

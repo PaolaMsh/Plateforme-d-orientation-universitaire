@@ -148,91 +148,109 @@ const GeneralTest = () => {
         }
     }, []);
 
-    const initializeSession = useCallback(async (forceNew = false) => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError('Veuillez vous connecter pour passer le test');
+    const initializeSession = useCallback(
+        async (forceNew = false) => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setError('Veuillez vous connecter pour passer le test');
+                    return null;
+                }
+
+                const existingSessionToken = localStorage.getItem(
+                    GENERAL_TEST_STORAGE.sessionToken,
+                );
+                const existingAssessmentId = localStorage.getItem(
+                    GENERAL_TEST_STORAGE.assessmentId,
+                );
+
+                if (forceNew) {
+                    clearGeneralAssessmentStorage();
+                }
+
+                if (
+                    !forceNew &&
+                    existingSessionToken &&
+                    existingAssessmentId &&
+                    !assessmentCompleted
+                ) {
+                    return {
+                        sessionToken: existingSessionToken,
+                        assessmentId: existingAssessmentId,
+                    };
+                }
+
+                const response = await api.post('/sessions', {
+                    testVersionId: 1,
+                    initialTestType: TEST_TYPES.GENERALE,
+                    depth: 5,
+                    profile: {
+                        startedAt: new Date().toISOString(),
+                        mode: 'category',
+                        category: TEST_TYPES.GENERALE,
+                        isGeneralTest: true,
+                    },
+                });
+
+                if (response?.data) {
+                    const newSessionToken = response.data.sessionToken;
+                    const newAssessmentId = response.data.assessment.id;
+                    localStorage.setItem(GENERAL_TEST_STORAGE.sessionToken, newSessionToken);
+                    localStorage.setItem(GENERAL_TEST_STORAGE.assessmentId, newAssessmentId);
+                    return { sessionToken: newSessionToken, assessmentId: newAssessmentId };
+                }
+                throw new Error("Erreur lors de l'initialisation");
+            } catch (err) {
+                console.error('Session error:', err);
+                setError(err.response?.data?.message || "Impossible d'initialiser le test");
                 return null;
             }
+        },
+        [assessmentCompleted],
+    );
 
-            const existingSessionToken = localStorage.getItem(GENERAL_TEST_STORAGE.sessionToken);
-            const existingAssessmentId = localStorage.getItem(GENERAL_TEST_STORAGE.assessmentId);
-
-            if (forceNew) {
-                clearGeneralAssessmentStorage();
-            }
-
-            if (!forceNew && existingSessionToken && existingAssessmentId && !assessmentCompleted) {
-                return { sessionToken: existingSessionToken, assessmentId: existingAssessmentId };
-            }
-
-            const response = await api.post('/sessions', {
-                testVersionId: 1,
-                initialTestType: TEST_TYPES.GENERALE,
-                depth: 5,
-                profile: {
-                    startedAt: new Date().toISOString(),
-                    mode: 'category',
-                    category: TEST_TYPES.GENERALE,
-                    isGeneralTest: true,
-                },
-            });
-
-            if (response?.data) {
-                const newSessionToken = response.data.sessionToken;
-                const newAssessmentId = response.data.assessment.id;
-                localStorage.setItem(GENERAL_TEST_STORAGE.sessionToken, newSessionToken);
-                localStorage.setItem(GENERAL_TEST_STORAGE.assessmentId, newAssessmentId);
-                return { sessionToken: newSessionToken, assessmentId: newAssessmentId };
-            }
-            throw new Error("Erreur lors de l'initialisation");
-        } catch (err) {
-            console.error('Session error:', err);
-            setError(err.response?.data?.message || "Impossible d'initialiser le test");
-            return null;
-        }
-    }, [assessmentCompleted]);
-
-    const completeAssessment = useCallback(async (token, assessmentIdParam) => {
-        setSubmitting(true);
-        try {
+    const completeAssessment = useCallback(
+        async (token, assessmentIdParam) => {
+            setSubmitting(true);
             try {
-                await api.post('/results/compute', {
-                    sessionToken: token,
-                    assessmentId: assessmentIdParam,
+                try {
+                    await api.post('/results/compute', {
+                        sessionToken: token,
+                        assessmentId: assessmentIdParam,
+                    });
+                } catch (computeErr) {
+                    console.warn('Compute warning:', computeErr);
+                }
+
+                const response = await api.get(`/results/by-assessment/${assessmentIdParam}`);
+
+                const reportData = { ...(response?.data || {}), assessmentId: assessmentIdParam };
+
+                // Sauvegarder les données
+                localStorage.setItem('assessment_id', String(assessmentIdParam));
+                localStorage.setItem('session_token', String(token));
+                localStorage.setItem('general_report_data', JSON.stringify(reportData));
+
+                // Nettoyer les données temporaires
+                clearGeneralAssessmentStorage();
+
+                // Rediriger vers le rapport
+                navigate('/rapport-general', {
+                    state: {
+                        assessmentResults: reportData,
+                        assessmentId: assessmentIdParam,
+                        sessionToken: token,
+                    },
                 });
-            } catch (computeErr) {
-                console.warn('Compute warning:', computeErr);
+            } catch (err) {
+                console.error('Error completing assessment:', err);
+                setError("Impossible de finaliser le test et d'afficher le rapport");
+            } finally {
+                setSubmitting(false);
             }
-
-            const response = await api.get(`/results/by-assessment/${assessmentIdParam}`);
-
-            const reportData = { ...(response?.data || {}), assessmentId: assessmentIdParam };
-            
-            // Sauvegarder les données
-            localStorage.setItem('assessment_id', String(assessmentIdParam));
-            localStorage.setItem('session_token', String(token));
-            localStorage.setItem('general_report_data', JSON.stringify(reportData));
-            
-            // Nettoyer les données temporaires
-            clearGeneralAssessmentStorage();
-            
-            // Rediriger vers le rapport
-            navigate('/rapport-general', {
-                state: {
-                    assessmentResults: reportData,
-                    assessmentId: assessmentIdParam,
-                    sessionToken: token,
-                },
-            });
-        } catch (err) {
-            console.error('Error completing assessment:', err);
-            setError("Impossible de finaliser le test et d'afficher le rapport");
-        } finally {
-            setSubmitting(false);
-        }
-    }, [navigate]);
+        },
+        [navigate],
+    );
 
     const fetchBatch = useCallback(
         async (tokenParam = null, assessmentIdParam = null, options = {}) => {

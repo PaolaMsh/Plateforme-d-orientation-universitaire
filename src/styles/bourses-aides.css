@@ -344,8 +344,6 @@
     font-size: 0.875rem;
 }
 
-
-
 .scholarships-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
@@ -358,8 +356,7 @@
     overflow: hidden;
     transition: all 0.3s ease;
     box-shadow: var(--shadow-md);
-        position: relative;
-
+    position: relative;
 }
 
 .scholarship-card:hover {
@@ -845,7 +842,6 @@
     opacity: 0.8;
 }
 
-
 @media (max-width: 768px) {
     .hero-content h1 {
         font-size: 2rem;
@@ -886,8 +882,6 @@
         white-space: nowrap;
     }
 }
-
-
 
 /* Highlight Bénin dans le hero */
 .benin-highlight {
@@ -1017,7 +1011,6 @@
     color: #6b7280;
     font-size: 16px;
 }
-
 
 @media (max-width: 768px) {
     .benin-badge {

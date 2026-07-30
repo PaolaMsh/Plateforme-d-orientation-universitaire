@@ -27,14 +27,14 @@ const VerifyEmailGuard = () => {
             }
 
             try {
-                console.log('📤 Envoi du token à l\'API...');
+                console.log("📤 Envoi du token à l'API...");
                 const response = await verifyEmail(token);
                 console.log('✅ Réponse API:', response);
-                
+
                 setStatus('success');
                 setTimeout(() => {
                     navigate('/auth/login', {
-                        state: { message: 'Email vérifié avec succès !' }
+                        state: { message: 'Email vérifié avec succès !' },
                     });
                 }, 2000);
             } catch (error) {
@@ -48,16 +48,18 @@ const VerifyEmailGuard = () => {
     }, [token, navigate]);
 
     return (
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '60vh',
-            padding: '2rem',
-            flexDirection: 'column',
-            textAlign: 'center',
-            gap: '1rem',
-        }}>
+        <div
+            style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '60vh',
+                padding: '2rem',
+                flexDirection: 'column',
+                textAlign: 'center',
+                gap: '1rem',
+            }}
+        >
             {status === 'verifying' && (
                 <>
                     <h2>⏳ Vérification de votre email…</h2>
